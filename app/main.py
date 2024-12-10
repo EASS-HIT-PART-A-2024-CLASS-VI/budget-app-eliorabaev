@@ -76,7 +76,7 @@ async def delete_expenses():
 # Suggestion Route
 @app.get("/suggestions/")
 async def get_suggestions():
-    # Example logic for suggestions
+    # Example logic - This will be updated.
     if balance.amount > 1000:
         return {"suggestion": "Consider investing in stocks or mutual funds"}
     elif balance.amount > 500:

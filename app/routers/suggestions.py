@@ -4,7 +4,7 @@ from shared_data import balances, incomes, expenses
 
 router = APIRouter()
 
-@router.get("/suggestions/{balance_id}", response_model=List[str])
+@router.get("/{balance_id}", response_model=List[str])
 async def get_suggestions(balance_id: int):
     if balance_id not in balances:
         raise HTTPException(status_code=404, detail="Balance not found")

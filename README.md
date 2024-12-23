@@ -47,37 +47,37 @@ pytest app/tests/unit_test.py
 ## API Endpoints
 * Balance:
     * `POST /balance/` - Set the initial balance.
-        ```
-        curl -X POST "http://localhost:8000/balance/" -H "Content-Type: application/json" -d '{"amount": 1000}'
-        ```
+     ```
+     curl -X POST "http://localhost:8000/balance/" -H "Content-Type: application/json" -d '{"amount": 1000}'
+     ```
     * `GET /balance/{balance_id}` - Retrieve the current balance.
-        ```
-        curl -X GET "http://localhost:8000/balance/1"
-        ```
+     ```
+     curl -X GET "http://localhost:8000/balance/1"
+     ```
 * Incomes:
     * `POST /incomes/` - Add a new income source.
-        ```
-        curl -X POST "http://localhost:8000/incomes/" -H "Content-Type: application/json" -d '{"balance_id": 1, "source": "Job", "amount": 500}'
-        ```
+     ```
+     curl -X POST "http://localhost:8000/incomes/" -H "Content-Type: application/json" -d '{"balance_id": 1, "source": "Job", "amount": 500}'
+     ```
     * `GET /incomes/{income_id}` - Retrieve an income source by ID.
-        ```
-        curl -X GET "http://localhost:8000/incomes/1"
-        ```
+     ```
+     curl -X GET "http://localhost:8000/incomes/1"
+     ```
 * Expenses:
     * `POST /expenses/` - Add a new expense.
-        ```
-        curl -X POST "http://localhost:8000/expenses/" -H "Content-Type: application/json" -d '{"balance_id": 1, "category": "Food", "amount": 100}'
-        ```
+     ```
+     curl -X POST "http://localhost:8000/expenses/" -H "Content-Type: application/json" -d '{"balance_id": 1, "category": "Food", "amount": 100}'
+     ```
     * `GET /expenses/{expense_id}` - Retrieve an expense by ID.
-        ```
-        curl -X GET "http://localhost:8000/expenses/1"
-        ```
+     ```
+     curl -X GET "http://localhost:8000/expenses/1"
+     ```
 
 * Suggestions:
     * `GET /suggestions/{balance_id}` - Get financial suggestions based on the current balance.
-        ```
-        curl -X GET "http://localhost:8000/suggestions/1"
-        ```
+     ```
+     curl -X GET "http://localhost:8000/suggestions/1"
+     ```
 
 ## Client Script
 The client.py script demonstrates HTTP requests using httpbin.

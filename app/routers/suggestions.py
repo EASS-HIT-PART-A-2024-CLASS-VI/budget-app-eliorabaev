@@ -1,17 +1,18 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from typing import List
-from shared_data import balances, incomes, expenses
 
 router = APIRouter()
 
 @router.get("/{balance_id}", response_model=List[str])
-async def get_suggestions(balance_id: int):
-    if balance_id not in balances:
+async def get_suggestions(request: Request, balance_id: int):
+    budget_state = request.app.state.budget_state
+
+    if balance_id not in budget_state.balances:
         raise HTTPException(status_code=404, detail="Balance not found")
     
-    balance = balances[balance_id].amount
-    total_income = sum(income.amount for income in incomes.values() if income.balance_id == balance_id)
-    total_expense = sum(expense.amount for expense in expenses.values() if expense.balance_id == balance_id)
+    balance = budget_state.balances[balance_id].amount
+    total_income = sum(income.amount for income in budget_state.incomes.values() if income.balance_id == balance_id)
+    total_expense = sum(expense.amount for expense in budget_state.expenses.values() if expense.balance_id == balance_id)
     
     suggestions = []
 

@@ -1,21 +1,20 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from models.balance import Balance
-from shared_data import balances
 from typing import Dict
 
 router = APIRouter()
-current_balance_id = 1
 
 @router.post("/", response_model=Balance)
-async def set_balance(new_balance: Balance):
-    global current_balance_id
+async def set_balance(request: Request, new_balance: Balance):
+    current_balance_id = request.app.state.budget_state.current_balance_id
     new_balance.id = current_balance_id
-    balances[current_balance_id] = new_balance
-    current_balance_id += 1
+    request.app.state.budget_state.balances[current_balance_id] = new_balance
+    request.app.state.budget_state.current_balance_id += 1
     return new_balance
 
 @router.get("/{balance_id}", response_model=Balance)
-async def get_balance(balance_id: int):
+async def get_balance(request: Request, balance_id: int):
+    balances = request.app.state.budget_state.balances
     if balance_id not in balances:
         raise HTTPException(status_code=404, detail="Balance not found")
     return balances[balance_id]

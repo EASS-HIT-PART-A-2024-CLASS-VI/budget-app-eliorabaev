@@ -4,7 +4,7 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from app.main import app
+from main import app
 
 client = TestClient(app)
 
@@ -46,4 +46,4 @@ def test_get_suggestions():
 
     response = client.get("/suggestions/1")
     assert response.status_code == 200
-    assert "suggestions" in response.json()
+    assert "suggestion" in response.json()

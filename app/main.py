@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from routers import balance, income, expense, suggestions
 from core.config import settings
+from state import lifespan
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 # Include routers
 app.include_router(balance.router, prefix="/balance", tags=["Balance"])

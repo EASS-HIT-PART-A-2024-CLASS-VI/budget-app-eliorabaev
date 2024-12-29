@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from routers import balance, income, expense, suggestions
-from core.config import settings
+from core.config import settings 
 from state import lifespan
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan)  # Initialize FastAPI app with lifespan management
 
-# Include routers
+# Include routers for different endpoints
 app.include_router(balance.router, prefix="/balance", tags=["Balance"])
 app.include_router(income.router, prefix="/incomes", tags=["Incomes"])
 app.include_router(expense.router, prefix="/expenses", tags=["Expenses"])

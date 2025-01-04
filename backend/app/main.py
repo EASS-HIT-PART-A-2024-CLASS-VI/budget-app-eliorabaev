@@ -1,11 +1,20 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from routers import balance, income, expense, suggestions
 from core.config import settings 
 from state import lifespan
 
-app = FastAPI(lifespan=lifespan)  # Initialize FastAPI app with lifespan management
+app = FastAPI(lifespan=lifespan)
 
-# Include routers for different endpoints
+# Set up CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Adjust this to your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(balance.router, prefix="/balance", tags=["Balance"])
 app.include_router(income.router, prefix="/incomes", tags=["Incomes"])
 app.include_router(expense.router, prefix="/expenses", tags=["Expenses"])

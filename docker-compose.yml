@@ -16,6 +16,6 @@ services:
       context: ./frontend
     container_name: budget-app-frontend
     ports:
-      - "3000:80" # Map port 3000 on the host to port 80 in the container
+      - "3000:3000" # Map port 3000 on the host to port 3000 in the container
     depends_on:
       - backend # Ensure the backend service is started before the frontend

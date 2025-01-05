@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getIncomes, addIncome } from '../api';
 
-const Income = () => {
+const Income = ({ onSubmit }) => {
     const [incomes, setIncomes] = useState([]);
     const [income, setIncome] = useState({ balance_id: 1, source: '', amount: '' });
 
@@ -26,8 +26,9 @@ const Income = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await addIncome(income);
-            setIncomes([...incomes, response.data]);
+            await addIncome(income);
+            setIncomes([...incomes, income]);
+            onSubmit();
         } catch (error) {
             console.error('Error adding income:', error);
         }
@@ -35,23 +36,33 @@ const Income = () => {
 
     return (
         <div>
-            <h2>Income</h2>
+            <h2>What is your source of income?</h2>
             <form onSubmit={handleSubmit}>
                 <label>
                     Source:
-                    <input type="text" name="source" value={income.source} onChange={handleChange} />
+                    <input
+                        type="text"
+                        name="source"
+                        value={income.source}
+                        onChange={handleChange}
+                    />
                 </label>
                 <label>
-                    Amount:
-                    <input type="number" name="amount" value={income.amount} onChange={handleChange} />
+                    How much do you get per month?
+                    <input
+                        type="number"
+                        name="amount"
+                        value={income.amount}
+                        onChange={handleChange}
+                    />
                 </label>
                 <button type="submit">Add Income</button>
             </form>
             <div>
                 <h3>Incomes</h3>
                 <ul>
-                    {incomes.map((inc) => (
-                        <li key={inc.id}>
+                    {incomes.map((inc, index) => (
+                        <li key={index}>
                             {inc.source}: {inc.amount}
                         </li>
                     ))}

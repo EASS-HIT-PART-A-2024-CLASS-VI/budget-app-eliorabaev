@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getExpenses, addExpense } from '../api';
 
-const Expense = () => {
+const Expense = ({ onSubmit }) => {
     const [expenses, setExpenses] = useState([]);
     const [expense, setExpense] = useState({ balance_id: 1, category: '', amount: '' });
 
@@ -26,8 +26,9 @@ const Expense = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await addExpense(expense);
-            setExpenses([...expenses, response.data]);
+            await addExpense(expense);
+            setExpenses([...expenses, expense]);
+            onSubmit();
         } catch (error) {
             console.error('Error adding expense:', error);
         }
@@ -35,23 +36,33 @@ const Expense = () => {
 
     return (
         <div>
-            <h2>Expense</h2>
+            <h2>What are your expenses?</h2>
             <form onSubmit={handleSubmit}>
                 <label>
                     Category:
-                    <input type="text" name="category" value={expense.category} onChange={handleChange} />
+                    <input
+                        type="text"
+                        name="category"
+                        value={expense.category}
+                        onChange={handleChange}
+                    />
                 </label>
                 <label>
                     Amount:
-                    <input type="number" name="amount" value={expense.amount} onChange={handleChange} />
+                    <input
+                        type="number"
+                        name="amount"
+                        value={expense.amount}
+                        onChange={handleChange}
+                    />
                 </label>
                 <button type="submit">Add Expense</button>
             </form>
             <div>
                 <h3>Expenses</h3>
                 <ul>
-                    {expenses.map((exp) => (
-                        <li key={exp.id}>
+                    {expenses.map((exp, index) => (
+                        <li key={index}>
                             {exp.category}: {exp.amount}
                         </li>
                     ))}

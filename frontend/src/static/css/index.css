@@ -1,65 +1,65 @@
-body {
-    font-family: Arial, sans-serif;
-}
+    body {
+        font-family: Arial, sans-serif;
+    }
 
-.App {
-    text-align: center;
-}
+    .App {
+        text-align: center;
+    }
 
-header {
-    background-color: #007BFF;
-    color: white;
-    padding: 20px;
-}
+    header {
+        background-color: #007BFF;
+        color: white;
+        padding: 20px;
+    }
 
-header h1 {
-    margin: 0;
-}
+    header h1 {
+        margin: 0;
+    }
 
-main {
-    padding: 20px;
-}
+    main {
+        padding: 20px;
+    }
 
-h2 {
-    color: #333;
-}
+    h2 {
+        color: #333;
+    }
 
-form {
-    margin: 20px 0;
-}
+    form {
+        margin: 20px 0;
+    }
 
-label {
-    margin: 10px 0;
-    display: block;
-}
+    label {
+        margin: 10px 0;
+        display: block;
+    }
 
-input {
-    margin: 10px 0;
-    padding: 5px;
-    width: 100%;
-    max-width: 300px;
-}
+    input {
+        margin: 10px 0;
+        padding: 5px;
+        width: 100%;
+        max-width: 300px;
+    }
 
-button {
-    padding: 10px 20px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
+    button {
+        padding: 10px 20px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
 
-button:hover {
-    background-color: #0056b3;
-}
+    button:hover {
+        background-color: #0056b3;
+    }
 
-ul {
-    list-style-type: none;
-    padding: 0;
-}
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
 
-li {
-    background: #f4f4f4;
-    margin: 5px 0;
-    padding: 10px;
-    border: 1px solid #ddd;
-}
+    li {
+        background: #f4f4f4;
+        margin: 5px 0;
+        padding: 10px;
+        border: 1px solid #ddd;
+    }

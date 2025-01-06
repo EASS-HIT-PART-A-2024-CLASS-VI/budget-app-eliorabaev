@@ -7,26 +7,26 @@ It features an organized microservice architecture with FastAPI, making it easil
 ```
 budget-app/
 ├── app/
-│   ├── main.py  # FastAPI application with CRUD operations for balance, incomes, and expenses.
-│   ├── unit_tests.py  # Unit tests for the FastAPI application.
-│   ├── state.py  # State management for the application.
-│   ├── requirements.txt  # Python dependencies for the project.
+│   ├── main.py              # FastAPI application with CRUD operations for balance, incomes, and expenses.
+│   ├── unit_tests.py        # Unit tests for the FastAPI application.
+│   ├── state.py             # State management for the application.
+│   ├── requirements.txt     # Python dependencies for the project.
 │   ├── core/
-│   │   ├── config.py  # Configuration settings.
-│   │   └── utils.py  # Utility functions.
+│   │   ├── config.py        # Configuration settings.
+│   │   └── utils.py         # Utility functions.
 │   ├── models/
-│   │   └── balance.py  # Balance data models.
+│   │   └── balance.py       # Balance data models.
 │   ├── routers/
-│   │   ├── balance.py  # Balance-related API routes.
-│   │   ├── expense.py  # Expense-related API routes.
-│   │   ├── income.py  # Income-related API routes.
-│   │   └── suggestions.py  # Suggestions-related API routes.
+│   │   ├── balance.py       # Balance-related API routes.
+│   │   ├── expense.py       # Expense-related API routes.
+│   │   ├── income.py        # Income-related API routes.
+│   │   └── suggestions.py   # Suggestions-related API routes.
 │   └── tests/
-│       └── unit_test.py  # Unit tests for the FastAPI application.
-├── Dockerfile  # Docker configuration for running the FastAPI application.
-├── client.py  # Python script making HTTP requests to httpbin.org.
-├── README.md  # Project documentation.
-└── .gitignore  # Git ignore file to specify untracked files to ignore.
+│       └── unit_test.py     # Unit tests for the FastAPI application.
+├── Dockerfile               # Docker configuration for running the FastAPI application.
+├── client.py                # Python script making HTTP requests to httpbin.org.
+├── README.md                # Project documentation.
+└── .gitignore               # Git ignore file to specify untracked files to ignore.
 ```
 
 ## Setup Instructions

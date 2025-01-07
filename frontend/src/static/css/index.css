@@ -26,82 +26,97 @@ body {
     color: var(--text-color);
     margin: 0;
     padding: 0;
+    
+    .App {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin: 0 auto;
+
+        main {
+            padding: 20px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            width: 60%;
+            max-width: 1200px;
+
+            h2 {
+                color: var(--text-color);
+                margin-bottom: 1em;
+            }
+
+            form {
+                margin: 20px 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+
+                label {
+                    margin: 10px 0;
+                    color: var(--text-color);
+                    display: flex;
+                    justify-content: center;
+                    flex-direction: column;
+
+                    input {
+                        margin: 10px 0;
+                        padding: 10px;
+                        max-width: 300px;
+                        color: var(--text-color);
+                        background-color: var(--input-bg);
+                        border: 1px solid var(--input-border);
+                        border-radius: 4px;
+                        transition: border-color 0.3s;
+
+                        &:hover {
+                            border-color: grey;
+                        }
+                        
+                        &:focus {
+                            outline: none;
+                            border-color: var(--accent-color);
+                        }
+                    }
+                }
+
+                
+                button {
+                    padding: 10px 20px;
+                    background-color: var(--accent-color);
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.3s ease;
+
+                    &:hover {
+                        background-color: var(--button-bg-hover);
+                    }
+                }
+            }
+
+            ul {
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+                background-color: var(--input-bg);
+                color: var(--text-color);
+
+                li {
+                    background: var(--input-bg);
+                    margin: 5px 0;
+                    padding: 10px;
+                    border: 1px solid var(--input-border);
+                    border-radius: 4px;
+                }
+            }
+        }
+    }
 }
 
-.App {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    margin: 0 auto;
-}
 
-main {
-    padding: 20px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
-    width: 60%;
-    max-width: 1200px;
-}
 
-h2 {
-    color: var(--text-color);
-    margin-bottom: 1em;
-}
-
-form {
-    margin: 20px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-label {
-    margin: 10px 0;
-    display: block;
-    color: var(--text-color);
-}
-
-input {
-    margin: 10px 0;
-    padding: 10px;
-    width: 100%;
-    max-width: 300px;
-    color: var(--text-color);
-    background-color: var(--input-bg);
-    border: 1px solid var(--input-border);
-    border-radius: 4px;
-}
-
-button {
-    padding: 10px 20px;
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: var(--button-bg-hover);
-}
-
-ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-}
-
-li {
-    background: var(--input-bg);
-    margin: 5px 0;
-    padding: 10px;
-    border: 1px solid var(--input-border);
-    border-radius: 4px;
-}

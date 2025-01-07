@@ -1,42 +1,59 @@
 .header {
     background-color: var(--secondary-color);
-    padding: 10px 20px;
-    color: var(--primary-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 60px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
     width: 100%;
+    z-index: 1000;
+    height: 45px;
+    top: 0;
+    position: sticky;
     box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    align-items: center;
+    display: flex;
+    justify-content: center; 
 
-    .logo {
-        img {
-            height: 40px;
-        }
-    }
+    .header-container {
+        color: var(--primary-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 60px;
+        width: 60%;
 
-    nav {
-        ul {
-            display: flex;
-            gap: 20px;
-            margin: 0;
+        h1 {
+            font-size: 1.5em;
+            margin: 0 auto;
             padding: 0;
-            list-style-type: none;
+            color: var(--primary-color);
+            text-align: center;
+            align-self: center;
+        }
 
-            li a {
-                color: var(--primary-color);
-                text-decoration: none;
-                font-weight: bold;
-                transition: color 0.3s ease;
-
-                &:hover {
-                    color: var(--accent-color);
+        .logo {
+            img {
+                height: 40px;
+                padding-top: 6px;
+            }
+        }
+        
+        nav {
+            ul {
+                display: flex;
+                gap: 20px;
+                margin: 0;
+                padding: 0;
+                list-style-type: none;
+        
+                li a {
+                    color: var(--primary-color);
+                    text-decoration: none;
+                    font-weight: bold;
+                    transition: color 0.3s ease;
+        
+                    &:hover {
+                        color: var(--accent-color);
+                    }
                 }
             }
-        }    
+        }
     }
 }

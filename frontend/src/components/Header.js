@@ -6,18 +6,24 @@ import logo from '../static/images/Logo2.png';
 const Header = () => {
   return (
     <header className="header">
-      <a href="/" className="logo">
-        <img className="logo-image" src={logo} alt="Budget app logo" />
-      </a>
-      <nav>
-        <ul>
-          <li>
-            <Link to="/about">About Me</Link>
-          </li>
-        </ul>
-      </nav>
+      <div className="header-container">
+        <div className="logo-container">
+          <a href="/" className="logo">
+            <img className="logo-image" src={logo} alt="Budget app logo" />
+          </a>
+        </div>
+        <h1 className="title">Budget App</h1>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/about">About Me</Link>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </header>
   );
 };
+
 
 export default Header;

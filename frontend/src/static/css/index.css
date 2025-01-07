@@ -35,7 +35,7 @@ body {
         margin: 0 auto;
 
         main {
-            padding: 20px;
+            padding: 20px 0px;
             background-color: var(--input-bg);
             color: var(--text-color);
             border-radius: 8px;

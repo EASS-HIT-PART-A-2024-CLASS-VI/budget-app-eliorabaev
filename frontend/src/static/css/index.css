@@ -8,9 +8,9 @@
 :root {
     --primary-color: #14FFEC;        /* Aqua Blue */
     --secondary-color: #0D7377;      /* Dark Teal */
-    --background-color: #1e2336;     /* Dark Charcoal */
-    --text-color: #E0E0E0;           /* Light Gray */
-    --accent-color: #FF9800;         /* Amber */
+    --background-color: #1e2336;     /* Dark Blue */
+    --text-color: #FFFFFF;           /* Light Gray */
+    --accent-color: #00bf63;         /* Green */
     --button-bg-hover: #424242;      /* Medium Charcoal */
     --input-bg: #1E1E1E;             /* Dark Gray */
     --input-border: #333333;         /* Border Gray */
@@ -33,88 +33,6 @@ body {
         align-items: center;
         text-align: center;
         margin: 0 auto;
-
-        main {
-            padding: 20px 0px;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-            width: 60%;
-            max-width: 1200px;
-
-            h2 {
-                color: var(--text-color);
-                margin-bottom: 1em;
-            }
-
-            form {
-                margin: 20px 0;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-
-                label {
-                    margin: 10px 0;
-                    color: var(--text-color);
-                    display: flex;
-                    justify-content: center;
-                    flex-direction: column;
-
-                    input {
-                        margin: 10px 0;
-                        padding: 10px;
-                        max-width: 300px;
-                        color: var(--text-color);
-                        background-color: var(--input-bg);
-                        border: 1px solid var(--input-border);
-                        border-radius: 4px;
-                        transition: border-color 0.3s;
-
-                        &:hover {
-                            border-color: grey;
-                        }
-                        
-                        &:focus {
-                            outline: none;
-                            border-color: var(--accent-color);
-                        }
-                    }
-                }
-
-                
-                button {
-                    padding: 10px 20px;
-                    background-color: var(--accent-color);
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: background-color 0.3s ease;
-
-                    &:hover {
-                        background-color: var(--button-bg-hover);
-                    }
-                }
-            }
-
-            ul {
-                list-style-type: none;
-                padding: 0;
-                margin: 0;
-                background-color: var(--input-bg);
-                color: var(--text-color);
-
-                li {
-                    background: var(--input-bg);
-                    margin: 5px 0;
-                    padding: 10px;
-                    border: 1px solid var(--input-border);
-                    border-radius: 4px;
-                }
-            }
-        }
     }
 }
 

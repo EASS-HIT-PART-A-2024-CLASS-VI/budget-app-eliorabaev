@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import '../static/css/Header.css';
-import logo from '../static/images/Logo2.png';
+import logo from '../static/images/logo_clean.png';
 
 const Header = () => {
   return (
@@ -12,7 +12,6 @@ const Header = () => {
             <img className="logo-image" src={logo} alt="Budget app logo" />
           </a>
         </div>
-        <h1 className="title">Budget App</h1>
         <nav>
           <ul>
             <li>

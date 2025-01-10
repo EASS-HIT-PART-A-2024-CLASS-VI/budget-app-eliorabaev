@@ -1,24 +1,25 @@
 .header {
-    background-color: var(--secondary-color);
-    width: 100%;
+    background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent background */
+    backdrop-filter: blur(10px); /* Blur effect */
+    width: 60%;
     z-index: 1000;
-    height: 45px;
+    height: 50px;
     top: 0;
-    position: sticky;
     box-sizing: border-box;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     align-items: center;
     display: flex;
     justify-content: center; 
-
+    position: fixed;
+    border-radius: 0 0 10px 10px;
     .header-container {
         color: var(--primary-color);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 60px;
-        width: 60%;
-
+        width: 100%;
+        padding: 10px 20px;    
+        
         h1 {
             font-size: 1.5em;
             margin: 0 auto;

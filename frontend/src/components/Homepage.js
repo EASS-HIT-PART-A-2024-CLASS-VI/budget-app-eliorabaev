@@ -6,7 +6,7 @@ import illustration from '../static/images/logo.png';
 const HomePage = () => {
     const navigate = useNavigate();
 
-    const handleGetStarted = () => {
+    const handleTryNow = () => {
         navigate('/budget-steps');
     };
 
@@ -23,8 +23,8 @@ const HomePage = () => {
                         Take control of your finances with Budget App. Plan, save, and grow your money effortlessly.
                     </p>
                     <div className="buttons">
-                        <button className="primary-button" onClick={handleGetStarted}>
-                            Get Started
+                        <button className="primary-button" onClick={handleTryNow}>
+                            Try Now
                         </button>
                         <button className="secondary-button">Learn More</button>
                     </div>

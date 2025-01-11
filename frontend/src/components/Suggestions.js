@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getSuggestions } from '../api';
+import '../static/css/StepStyles.css';
 
 const Suggestions = ({ balanceId }) => {
     const [suggestions, setSuggestions] = useState([]);
@@ -18,21 +19,28 @@ const Suggestions = ({ balanceId }) => {
     };
 
     return (
-        <div>
-            <h2>Get Financial Suggestions</h2>
-            <button onClick={fetchSuggestions}>Get Suggestions</button>
-            {loading ? (
-                <p>Loading...</p>
-            ) : (
-                <div>
-                    <h3>Financial Suggestions</h3>
+        <div className="step-container">
+            <h2 className="step-title">Financial Suggestions</h2>
+            <button
+                onClick={fetchSuggestions}
+                className="step-button"
+                disabled={loading}
+            >
+                {loading ? 'Loading...' : 'Get Suggestions'}
+            </button>
+            <div className="suggestions-list">
+                {suggestions.length > 0 ? (
                     <ul>
                         {suggestions.map((suggestion, index) => (
-                            <li key={index}>{suggestion}</li>
+                            <li key={index} className="suggestions-list-item">
+                                {suggestion}
+                            </li>
                         ))}
                     </ul>
-                </div>
-            )}
+                ) : (
+                    <p>No suggestions available yet.</p>
+                )}
+            </div>
         </div>
     );
 };

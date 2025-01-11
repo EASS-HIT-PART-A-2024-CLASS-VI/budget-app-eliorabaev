@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getIncomes, addIncome } from '../api';
+import '../static/css/StepStyles.css';
 
 const Income = ({ onSubmit }) => {
     const [incomes, setIncomes] = useState([]);
@@ -15,7 +16,6 @@ const Income = ({ onSubmit }) => {
             setIncomes(response.data || []);
         } catch (error) {
             console.error('Error fetching incomes:', error);
-            setIncomes([]); // Default state if fetch fails
         }
     };
 
@@ -28,6 +28,7 @@ const Income = ({ onSubmit }) => {
         try {
             await addIncome(income);
             setIncomes([...incomes, income]);
+            setIncome({ balance_id: 1, source: '', amount: '' }); // Reset form
             onSubmit();
         } catch (error) {
             console.error('Error adding income:', error);
@@ -35,9 +36,9 @@ const Income = ({ onSubmit }) => {
     };
 
     return (
-        <div>
-            <h2>What is your source of income?</h2>
-            <form onSubmit={handleSubmit}>
+        <div className="step-container">
+            <h2 className="step-title">Add Your Income Sources</h2>
+            <form className="step-form" onSubmit={handleSubmit}>
                 <label>
                     Source:
                     <input
@@ -45,25 +46,32 @@ const Income = ({ onSubmit }) => {
                         name="source"
                         value={income.source}
                         onChange={handleChange}
+                        className="step-input"
+                        placeholder="e.g., Job, Freelance"
+                        required
                     />
                 </label>
                 <label>
-                    How much do you get per month?
+                    Amount:
                     <input
                         type="number"
                         name="amount"
                         value={income.amount}
                         onChange={handleChange}
+                        className="step-input"
+                        placeholder="Enter amount"
+                        required
                     />
                 </label>
-                <button type="submit">Add Income</button>
+                <button type="submit" className="step-button">Add Income</button>
             </form>
-            <div>
-                <h3>Incomes</h3>
+            <div className="list-container">
+                <h3>Your Income Sources</h3>
                 <ul>
                     {incomes.map((inc, index) => (
-                        <li key={index}>
-                            {inc.source}: {inc.amount}
+                        <li key={index} className="list-item">
+                            <span>{inc.source}</span>
+                            <span>${inc.amount}</span>
                         </li>
                     ))}
                 </ul>

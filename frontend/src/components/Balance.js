@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getBalance, setBalance as apiSetBalance } from '../api';
+import '../static/css/StepStyles.css';
 
 const Balance = ({ onSubmit }) => {
     const [amount, setAmount] = useState('');
@@ -31,18 +32,20 @@ const Balance = ({ onSubmit }) => {
     };
 
     return (
-        <div>
-            <h2>Hello customer, what is your balance right now?</h2>
-            <form onSubmit={handleSubmit}>
+        <div className="step-container">
+            <h2 className="step-title">Hello customer, what is your balance right now?</h2>
+            <form className="step-form" onSubmit={handleSubmit}>
                 <label>
                     Amount:
                     <input
                         type="number"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
+                        className="step-input"
+                        placeholder="Enter your balance"
                     />
                 </label>
-                <button type="submit">Set Balance</button>
+                <button type="submit" className="step-button">Set Balance</button>
             </form>
         </div>
     );

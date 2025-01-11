@@ -1,0 +1,80 @@
+.step-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 60%; /* Fixed width for all steps */
+    max-width: 700px; /* Prevent steps from being too wide on large screens */
+    min-height: 500px; /* Maintain consistent height across all steps */
+    margin: 20px auto;
+    padding: 30px;
+    background-color: var(--input-bg);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    color: var(--text-color);
+    box-sizing: border-box;
+}
+
+.step-title {
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+.step-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Even spacing between form elements */
+    width: 100%; /* Take full container width */
+    max-width: 500px; /* Limit maximum form width */
+}
+
+.step-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1em;
+    border: 2px solid var(--input-border);
+    border-radius: 8px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.step-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.step-button {
+    align-self: center; /* Center button horizontally */
+    padding: 15px 25px;
+    font-size: 1em;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.step-button:hover {
+    background-color: var(--button-bg-hover);
+    transform: scale(1.05);
+}
+
+.list-container {
+    margin-top: 30px;
+    width: 100%;
+    text-align: left;
+}
+
+.list-item {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between; /* Align content horizontally */
+    background-color: var(--background-color);
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

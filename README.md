@@ -1,6 +1,8 @@
 # 🌟 Budget App
 
-![Budget App Logo](frontend/src/static/images/logo.png)
+<p align="center">
+  <img src="frontend/src/static/images/logo.png" alt="Budget App Logo" width="50%">
+</p>
 
 This repository contains the **Budget App**, a full-stack application designed to help users manage their finances effectively. It features a modern frontend built with React and a robust backend powered by FastAPI. The application tracks balances, incomes, and expenses while offering financial advice based on spending habits. All services are containerized using Docker for easy deployment.
 

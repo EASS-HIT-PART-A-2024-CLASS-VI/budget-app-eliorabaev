@@ -142,14 +142,25 @@ frontend/
     ├── api.js               # API utilities for backend communication
     ├── components/
     │   ├── Balance.js       # Displays balance information
+    │   ├── BudgetSteps.js   # Step-by-step guide for budget planning
     │   ├── Expense.js       # Displays expenses
     │   ├── Header.js        # Header component
-    │   ├── Income.js        # Displays incomes
+    │   ├── Homepage.js      # Homepage layout and structure
+    │   ├── Income.js        # Displays income details
     │   └── Suggestions.js   # Displays financial suggestions
+    ├── fonts/
+    │   ├── Garet-Book.ttf   # Font file for regular text
+    │   └── Garet-Heavy.ttf  # Font file for heavy text
     ├── index.js             # Entry point for the React application
-    └── static/css/
-        ├── Header.css       # Styling for the header
-        └── index.css        # General application styling
+    └── static/
+        ├── css/
+        │   ├── Header.css   # Styling for the header
+        │   ├── Homepage.css # Styling for the homepage
+        │   └── index.css    # General application styling
+        └── images/
+            ├── logo.png         # Main logo image
+            ├── logo_clean.png   # Clean logo image variant
+            └── logo_header.png  # Logo for the header
 ```
 
 ### 🛠️ Setup Instructions

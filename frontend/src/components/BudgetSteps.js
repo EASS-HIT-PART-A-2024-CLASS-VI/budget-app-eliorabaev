@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './Header'; // Import the Header component
 import Balance from './Balance';
 import Income from './Income';
@@ -25,17 +24,15 @@ function BudgetSteps() {
     };
 
     return (
-        <Router>
-            <div className="App">
-                <Header /> {/* Include the Header component */}
-                <main>
-                    {step === 1 && <Balance onSubmit={handleBalanceSubmit} />}
-                    {step === 2 && <Income onSubmit={handleIncomeSubmit} />}
-                    {step === 3 && <Expense onSubmit={handleExpenseSubmit} />}
-                    {step === 4 && <Suggestions balanceId={balance.id} />}
-                </main>
-            </div>
-        </Router>
+        <div className="App">
+            <Header /> {/* Include the Header component */}
+            <main>
+                {step === 1 && <Balance onSubmit={handleBalanceSubmit} />}
+                {step === 2 && <Income onSubmit={handleIncomeSubmit} />}
+                {step === 3 && <Expense onSubmit={handleExpenseSubmit} />}
+                {step === 4 && <Suggestions balanceId={balance.id} />}
+            </main>
+        </div>
     );
 }
 

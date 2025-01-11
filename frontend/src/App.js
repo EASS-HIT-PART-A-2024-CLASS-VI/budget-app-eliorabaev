@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/Header';
 import Homepage from './components/Homepage';
+import BudgetSteps from './components/BudgetSteps';
 import './static/css/index.css';
 
 function App() {
@@ -9,7 +10,10 @@ function App() {
         <Router>
             <div className="App">
                 <Header />
-                <Homepage />
+                <Routes>
+                    <Route path="/" element={<Homepage />} />
+                    <Route path="/budget-steps" element={<BudgetSteps />} />
+                </Routes>
             </div>
         </Router>
     );

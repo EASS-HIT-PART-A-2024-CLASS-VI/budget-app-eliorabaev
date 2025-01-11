@@ -1,0 +1,42 @@
+.budget-steps {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    background-color: var(--background-color);
+    padding-top: 80px; /* Account for fixed header height */
+    box-sizing: border-box;
+}
+
+.budget-steps-main {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.budget-steps-navigation {
+    width: 60%; /* Match step-container width */
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.budget-steps-back-button {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.budget-steps-back-button:hover {
+    background-color: var(--button-bg-hover);
+    transform: scale(1.05);
+}

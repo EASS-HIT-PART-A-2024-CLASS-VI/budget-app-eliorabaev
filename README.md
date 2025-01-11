@@ -130,37 +130,41 @@ The frontend is built with React, leveraging modern web technologies to deliver 
 
 ### 📂 Directory Structure
 ```
-frontend/
-├── Dockerfile                # Docker configuration for the frontend
-├── package-lock.json         # Dependency lock file
-├── package.json              # Project dependencies and scripts
-├── public/
-│   └── index.html            # Main HTML file
-└── src/
-    ├── App.js               # Main application component
-    ├── ErrorBoundary.js     # Error boundary for handling UI errors
-    ├── api.js               # API utilities for backend communication
-    ├── components/
-    │   ├── Balance.js       # Displays balance information
-    │   ├── BudgetSteps.js   # Step-by-step guide for budget planning
-    │   ├── Expense.js       # Displays expenses
-    │   ├── Header.js        # Header component
-    │   ├── Homepage.js      # Homepage layout and structure
-    │   ├── Income.js        # Displays income details
-    │   └── Suggestions.js   # Displays financial suggestions
-    ├── fonts/
-    │   ├── Garet-Book.ttf   # Font file for regular text
-    │   └── Garet-Heavy.ttf  # Font file for heavy text
-    ├── index.js             # Entry point for the React application
-    └── static/
-        ├── css/
-        │   ├── Header.css   # Styling for the header
-        │   ├── Homepage.css # Styling for the homepage
-        │   └── index.css    # General application styling
-        └── images/
-            ├── logo.png         # Main logo image
-            ├── logo_clean.png   # Clean logo image variant
-            └── logo_header.png  # Logo for the header
+├── Dockerfile                  # Docker configuration file for containerizing the frontend
+├── package-lock.json           # Automatically generated file that locks dependencies
+├── package.json                # Project metadata, scripts, and dependency management
+├── public                      # Public folder for static assets accessible without build tools
+│   └── index.html              # Main HTML file that serves as the entry point for the React app
+└── src                         # Source folder containing the application's main code
+    ├── App.js                  # Main application component, rendering routes and global layout
+    ├── ErrorBoundary.js        # Error boundary for catching and displaying UI errors
+    ├── api.js                  # API utilities for backend communication (e.g., HTTP requests)
+    ├── components              # Folder containing reusable React components
+    │   ├── Balance.js          # Displays and manages the user's current balance
+    │   ├── BudgetSteps.js      # Multi-step component guiding users through budgeting tasks
+    │   ├── Expense.js          # Displays and manages expense-related tasks
+    │   ├── Header.js           # Header component with navigation and branding
+    │   ├── Homepage.js         # Homepage layout and content
+    │   ├── Income.js           # Displays and manages income-related tasks
+    │   └── Suggestions.js      # Displays financial suggestions based on balance data
+    ├── fonts                   # Folder containing custom font files
+    │   ├── Garet-Book.ttf      # Font file for regular text
+    │   └── Garet-Heavy.ttf     # Font file for bold or heavy text
+    ├── index.js                # Application's entry point, responsible for rendering `App.js`
+    └── static                  # Static assets folder for styling and images
+        ├── css                 # Folder containing all CSS files for styling the app
+        │   ├── BudgetSteps.css # Styles specific to the BudgetSteps component
+        │   ├── Expense.css     # Styles specific to the Expense component
+        │   ├── Header.css      # Styles for the Header component
+        │   ├── Homepage.css    # Styles for the Homepage layout
+        │   ├── Income.css      # Styles specific to the Income component
+        │   ├── StepStyles.css  # Shared styles for all step-based components (e.g., Balance, Income)
+        │   ├── Suggestions.css # Styles specific to the Suggestions component
+        │   └── index.css       # General application-wide styles
+        └── images              # Folder containing all image assets
+            ├── logo.png        # Main logo image for the app
+            ├── logo_clean.png  # Clean or simplified variant of the app logo
+            └── logo_header.png # Logo used in the header component
 ```
 
 ### 🛠️ Setup Instructions

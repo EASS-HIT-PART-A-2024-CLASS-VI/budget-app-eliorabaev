@@ -1,6 +1,6 @@
 # 🌟 Budget App
 
-<p align="center">
+<p align="left">
   <img src="frontend/src/static/images/logo.png" alt="Budget App Logo" width="50%">
 </p>
 

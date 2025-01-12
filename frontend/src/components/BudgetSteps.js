@@ -1,50 +1,80 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from './Header';
 import Balance from './Balance';
 import Income from './Income';
 import Expense from './Expense';
 import Suggestions from './Suggestions';
-import '../static/css/BudgetSteps.css';
-import '../static/css/StepStyles.css';
+import '../static/css/StepStyles.css'; // Already existing styles
+import '../static/css/BudgetSteps.css'; // For additional styling
 
-function BudgetSteps() {
+const BudgetSteps = () => {
     const [step, setStep] = useState(1);
-    const [balance, setBalance] = useState({ id: null, amount: '' });
+    const [data, setData] = useState({
+        balance: null,
+        incomes: [],
+        expenses: [],
+    });
     const navigate = useNavigate();
 
     const handleBalanceSubmit = (balance) => {
-        setBalance(balance);
+        setData({ ...data, balance });
         setStep(2);
     };
 
-    const handleIncomeSubmit = () => {
+    const handleIncomeSubmit = (incomes) => {
+        setData({ ...data, incomes });
         setStep(3);
     };
 
-    const handleExpenseSubmit = () => {
+    const handleExpenseSubmit = (expenses) => {
+        setData({ ...data, expenses });
         setStep(4);
     };
 
-    const goBackToHomepage = () => {
+    const handleSuggestionsComplete = () => {
         navigate('/');
+    };
+
+    const steps = [
+        { component: <Balance onSubmit={handleBalanceSubmit} setStep={setStep} />, title: 'Balance' },
+        { component: <Income onSubmit={handleIncomeSubmit} setStep={setStep} />, title: 'Income' },
+        { component: <Expense onSubmit={handleExpenseSubmit} setStep={setStep} />, title: 'Expense' },
+        { component: <Suggestions balanceId={data.balance?.id} setStep={setStep} />, title: 'Suggestions' },
+    ];
+    
+    // Helper function to handle "Back" button behavior
+    const getBackButtonLabel = () => {
+        if (step === 1) return 'Back to Homepage';
+        if (step === 2) return 'Back to Balance';
+        if (step === 3) return 'Back to Income';
+        if (step === 4) return 'Back to Expenses';
+        return 'Back';
+    };
+
+    const handleBackButtonClick = () => {
+        if (step === 1) {
+            navigate('/'); // Navigate to the homepage
+        } else {
+            setStep(step - 1); // Navigate to the previous step
+        }
     };
 
     return (
         <div className="budget-steps">
-            <div className="budget-steps-main">
-                <div className="budget-steps-navigation">
-                    <button className="budget-steps-back-button" onClick={goBackToHomepage}>
-                        Back to Homepage
+            <header>
+                {(
+                    <button
+                        className="budget-steps-back-button"
+                        onClick={handleBackButtonClick}
+                    >
+                        {getBackButtonLabel()}
                     </button>
-                </div>
-                {step === 1 && <Balance onSubmit={handleBalanceSubmit} />}
-                {step === 2 && <Income onSubmit={handleIncomeSubmit} />}
-                {step === 3 && <Expense onSubmit={handleExpenseSubmit} />}
-                {step === 4 && <Suggestions balanceId={balance.id} />}
-            </div>
+                )}
+                <h1 className="step-title">{steps[step - 1].title}</h1>
+            </header>
+            {steps[step - 1].component}
         </div>
     );
-}
+};
 
 export default BudgetSteps;

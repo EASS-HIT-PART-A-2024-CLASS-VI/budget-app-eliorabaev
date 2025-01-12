@@ -15,12 +15,14 @@ const HomePage = () => {
             <div className="content">
                 <div className="left">
                     <h1>
-                        It's time to make money out of your money.
+                        It's time to <span className="highlight">make money</span> out of <span className="highlight">your money</span>.
                         <br />
-                        <span className="highlight">Try Budget App now!</span>
+                        <span>Try Budget App now!</span>
                     </h1>
-                    <p className="description">
-                        Take control of your finances with Budget App. Plan, save, and grow your money effortlessly.
+                    <p className="diescrption">
+                        Take control of your finances with Budget App.
+                        <br />
+                        Plan, save, and grow your money effortlessly <span className="highlight">using top-geared AI</span>.
                     </p>
                     <div className="buttons">
                         <button className="primary-button" onClick={handleTryNow}>

@@ -28,11 +28,11 @@ const Suggestions = ({ balanceId }) => {
             >
                 {loading ? 'Loading...' : 'Get Suggestions'}
             </button>
-            <div className="suggestions-list">
+            <div className="list-container">
                 {suggestions.length > 0 ? (
                     <ul>
                         {suggestions.map((suggestion, index) => (
-                            <li key={index} className="suggestions-list-item">
+                            <li key={index} className="list-item">
                                 {suggestion}
                             </li>
                         ))}

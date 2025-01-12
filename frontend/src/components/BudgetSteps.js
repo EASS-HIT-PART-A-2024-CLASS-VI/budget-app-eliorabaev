@@ -32,7 +32,6 @@ function BudgetSteps() {
 
     return (
         <div className="budget-steps">
-            <Header />
             <div className="budget-steps-main">
                 <div className="budget-steps-navigation">
                     <button className="budget-steps-back-button" onClick={goBackToHomepage}>

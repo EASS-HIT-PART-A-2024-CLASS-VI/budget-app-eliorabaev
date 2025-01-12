@@ -158,12 +158,9 @@ The frontend is built with React, leveraging modern web technologies to deliver 
     └── static                  # Static assets folder for styling and images
         ├── css                 # Folder containing all CSS files for styling the app
         │   ├── BudgetSteps.css # Styles specific to the BudgetSteps component
-        │   ├── Expense.css     # Styles specific to the Expense component
         │   ├── Header.css      # Styles for the Header component
         │   ├── Homepage.css    # Styles for the Homepage layout
-        │   ├── Income.css      # Styles specific to the Income component
         │   ├── StepStyles.css  # Shared styles for all step-based components (e.g., Balance, Income)
-        │   ├── Suggestions.css # Styles specific to the Suggestions component
         │   └── index.css       # General application-wide styles
         └── images              # Folder containing all image assets
             ├── logo.png        # Main logo image for the app

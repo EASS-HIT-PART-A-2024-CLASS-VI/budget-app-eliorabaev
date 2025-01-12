@@ -23,22 +23,33 @@ const Income = ({ onSubmit }) => {
         setIncome({ ...income, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
+    const handleAddIncome = async (e) => {
         e.preventDefault();
+        if (!income.source || !income.amount) {
+            alert("Please fill in all fields before adding an income.");
+            return;
+        }
         try {
             await addIncome(income);
-            setIncomes([...incomes, income]);
-            setIncome({ balance_id: 1, source: '', amount: '' }); // Reset form
-            onSubmit();
+            setIncomes([...incomes, income]); // Add income to the list
+            setIncome({ balance_id: 1, source: '', amount: '' }); // Reset the form
         } catch (error) {
             console.error('Error adding income:', error);
         }
     };
 
+    const handleNext = () => {
+        if (incomes.length === 0) {
+            alert("Please add at least one income before proceeding.");
+            return;
+        }
+        onSubmit(incomes); // Pass incomes to the parent component
+    };
+
     return (
         <div className="step-container">
             <h2 className="step-title">Add Your Income Sources</h2>
-            <form className="step-form" onSubmit={handleSubmit}>
+            <form className="step-form" onSubmit={handleAddIncome}>
                 <label>
                     Source:
                     <input
@@ -63,18 +74,25 @@ const Income = ({ onSubmit }) => {
                         required
                     />
                 </label>
-                <button type="submit" className="step-button">Add Income</button>
+                <div className="buttons">
+                    <button type="submit" className="step-button">Add Income</button>
+                    <button onClick={handleNext} className="secondary-button">Next</button>
+                </div>
             </form>
             <div className="list-container">
                 <h3>Your Income Sources</h3>
-                <ul>
-                    {incomes.map((inc, index) => (
-                        <li key={index} className="list-item">
-                            <span>{inc.source}</span>
-                            <span>${inc.amount}</span>
-                        </li>
-                    ))}
-                </ul>
+                {incomes.length > 0 ? (
+                    <ul>
+                        {incomes.map((inc, index) => (
+                            <li key={index} className="list-item">
+                                <span>{inc.source}</span>
+                                <span>${inc.amount}</span>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>No incomes added yet.</p>
+                )}
             </div>
         </div>
     );

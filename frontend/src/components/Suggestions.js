@@ -2,19 +2,16 @@ import React, { useState } from 'react';
 import { getSuggestions } from '../api';
 import '../static/css/StepStyles.css';
 
-const Suggestions = ({ balanceId }) => {
+const Suggestions = () => {
     const [suggestions, setSuggestions] = useState([]);
-    const [loading, setLoading] = useState(false);
 
     const fetchSuggestions = async () => {
-        setLoading(true);
+        const hardcodedBalanceId = 1; // Hardcoded balance ID
         try {
-            const response = await getSuggestions(balanceId);
+            const response = await getSuggestions(hardcodedBalanceId);
             setSuggestions(response.data || []);
-            setLoading(false);
         } catch (error) {
-            console.error('Error fetching suggestions:', error);
-            setLoading(false);
+            console.error('Error fetching suggestions:', error.response?.data || error.message);
         }
     };
 
@@ -24,9 +21,8 @@ const Suggestions = ({ balanceId }) => {
             <button
                 onClick={fetchSuggestions}
                 className="step-button"
-                disabled={loading}
             >
-                {loading ? 'Loading...' : 'Get Suggestions'}
+                Get Suggestions
             </button>
             <div className="list-container">
                 {suggestions.length > 0 ? (

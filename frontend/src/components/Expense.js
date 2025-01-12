@@ -66,12 +66,12 @@ const Expense = ({ onSubmit }) => {
                 </label>
                 <button type="submit" className="step-button">Add Expense</button>
             </form>
-            <div className="expense-list">
+            <div className="list-container">
                 <h3>Your Expenses</h3>
                 <ul>
                     {expenses.map((exp, index) => (
-                        <li key={index} className="expense-list-item">
-                            <span>{exp.category}</span>: <span>${exp.amount}</span>
+                        <li key={index} className="list-item">
+                            <span>{exp.category}</span> <span>${exp.amount}</span>
                         </li>
                     ))}
                 </ul>

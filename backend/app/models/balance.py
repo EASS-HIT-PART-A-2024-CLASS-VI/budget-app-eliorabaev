@@ -19,3 +19,13 @@ class Expense(BaseModel):
     balance_id: int
     category: str
     amount: float
+
+class UpdateIncome(BaseModel):
+    balance_id: Optional[int] = None
+    source: Optional[str] = None
+    amount: Optional[float] = None
+
+class UpdateExpense(BaseModel):
+    balance_id: Optional[int] = None
+    category: Optional[str] = None
+    amount: Optional[float] = None

@@ -1,30 +1,29 @@
-from fastapi import APIRouter, HTTPException, Request
-from models.balance import Expense
+from fastapi import APIRouter, Request
+from models.balance import Expense, UpdateExpense
 from typing import List
+from core.utils import get_balance_or_404
+from services.expense_service import add_expense, get_expense_by_id, get_all_expenses, update_expense, delete_expense
 
-router = APIRouter()  # Create a new API router
+router = APIRouter()
 
 @router.post("/", response_model=Expense)
-async def add_expense(request: Request, expense: Expense):
-    # Add a new expense
-    current_expense_id = request.app.state.budget_state.current_expense_id
-    if expense.balance_id not in request.app.state.budget_state.balances: # Check if the associated balance exists
-        raise HTTPException(status_code=404, detail="Associated balance not found")
-
-    expense.id = current_expense_id
-    request.app.state.budget_state.expenses[current_expense_id] = expense
-    request.app.state.budget_state.current_expense_id += 1
-    return expense
+async def create_expense(request: Request, expense: Expense):
+    budget_state = request.app.state.budget_state
+    get_balance_or_404(budget_state, expense.balance_id)  # Validate balance ID
+    return await add_expense(request, expense)
 
 @router.get("/{expense_id}", response_model=Expense)
-async def get_expense(request: Request, expense_id: int):
-    # Get an expense by ID
-    expenses = request.app.state.budget_state.expenses
-    if expense_id not in expenses:
-        raise HTTPException(status_code=404, detail="Expense not found")
-    return expenses[expense_id]
+async def retrieve_expense(request: Request, expense_id: int):
+    return await get_expense_by_id(request, expense_id)
 
 @router.get("/", response_model=List[Expense])
-async def get_expenses(request: Request):
-    # Get all expenses
-    return list(request.app.state.budget_state.expenses.values())
+async def retrieve_all_expenses(request: Request):
+    return await get_all_expenses(request)
+
+@router.patch("/{expense_id}", response_model=Expense)
+async def update_expense_endpoint(request: Request, expense_id: int, updated_expense: UpdateExpense):
+    return await update_expense(request, expense_id, updated_expense)
+
+@router.delete("/{expense_id}", status_code=204)
+async def delete_expense_endpoint(request: Request, expense_id: int):
+    await delete_expense(request, expense_id)

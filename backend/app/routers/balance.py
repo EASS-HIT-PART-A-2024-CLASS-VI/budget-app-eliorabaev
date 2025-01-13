@@ -12,8 +12,8 @@ async def set_balance(request: Request, new_balance: Balance):
 async def get_balance(request: Request, balance_id: int):
     return await retrieve_balance(request, balance_id)
 
-@router.put("/{balance_id}", response_model=Balance)
-async def update_balance_endpoint(request: Request, balance_id: int, updated_balance: Balance):
+@router.patch("/{balance_id}", response_model=Balance)
+async def patch_balance_endpoint(request: Request, balance_id: int, updated_balance: Balance):
     return await update_balance(request, balance_id, updated_balance)
 
 @router.delete("/{balance_id}", status_code=204)

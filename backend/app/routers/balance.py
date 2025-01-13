@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from models.balance import Balance
-from services.balance_service import create_balance, retrieve_balance
+from services.balance_service import create_balance, retrieve_balance, update_balance
 
 router = APIRouter()
 
@@ -11,3 +11,7 @@ async def set_balance(request: Request, new_balance: Balance):
 @router.get("/{balance_id}", response_model=Balance)
 async def get_balance(request: Request, balance_id: int):
     return await retrieve_balance(request, balance_id)
+
+@router.put("/{balance_id}", response_model=Balance)
+async def update_balance_endpoint(request: Request, balance_id: int, updated_balance: Balance):
+    return await update_balance(request, balance_id, updated_balance)

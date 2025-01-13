@@ -4,46 +4,74 @@ import '../static/css/StepStyles.css';
 
 const Balance = ({ onSubmit, setStep }) => {
     const [amount, setAmount] = useState('');
-    const [balanceId, setBalanceId] = useState(1);
-    const [isBalanceSet, setIsBalanceSet] = useState(false); // Track if balance has been set
+    const [isBalanceSet, setIsBalanceSet] = useState(false);
+    const balanceId = 1;
 
     useEffect(() => {
-        fetchBalance(balanceId);
-    }, [balanceId]);
+        checkAndFetchBalance();
+    }, []);
 
-    const fetchBalance = async (id) => {
+    const checkAndFetchBalance = async () => {
         try {
-            const response = await getBalance(id);
+            const response = await getBalance(balanceId);
             if (response.data && response.data.amount) {
                 setAmount(response.data.amount);
-                setIsBalanceSet(true); // Mark balance as set if fetched successfully
+                setIsBalanceSet(true);
+                console.log('Balance fetched successfully:', response.data.amount);
+            } else {
+                console.log('No existing balance found. Ready to set a new balance.');
             }
         } catch (error) {
-            console.error('Error fetching balance:', error);
-            setAmount(0); // Default state if fetch fails
+            console.warn('Unable to fetch balance. Proceeding without fetching.');
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSetBalance = async (e) => {
         e.preventDefault();
+        if (isBalanceSet) {
+            console.warn('Balance is already set. No need to set it again.');
+            return;
+        }
+
         const balance = { id: balanceId, amount };
         try {
             await apiSetBalance(balance);
-            setIsBalanceSet(true); // Mark balance as set
-            onSubmit(balance);
+            setIsBalanceSet(true);
+            console.log('Balance successfully set:', balance);
         } catch (error) {
             console.error('Error setting balance:', error);
         }
     };
 
     const handleNext = () => {
-        setStep(2); // Move to the next step
+        if (!isBalanceSet) {
+            alert('Please set your balance before proceeding.');
+            return;
+        }
+        const balance = { id: balanceId, amount };
+        onSubmit(balance);
+        setStep(2);
     };
 
     return (
         <div className="step-container">
-            <h2 className="step-title">Hello customer, what is your balance right now?</h2>
-            <form className="step-form" onSubmit={handleSubmit}>
+            {/* Consistent Content Wrapper */}
+            <div className="dynamic-content">
+                {!isBalanceSet ? (
+                    <>
+                        <h2 className="step-title">Enter your balance</h2>
+                        <p className="balance-message">If you have more than one balance, add them up.</p>
+                        <p className="balance-warning">(Once a balance is set it cannot be changed!)</p>
+                    </>
+                ) : (
+                    <p className="balance-set">
+                        Balance set to ${amount}. <br /> You cannot change it unless you open an account.
+                    </p>
+                )}
+            </div>
+
+            {/* Balance Input Form */}
+            <form className="step-form" onSubmit={handleSetBalance}>
                 <label>
                     Amount:
                     <input
@@ -51,29 +79,27 @@ const Balance = ({ onSubmit, setStep }) => {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         className="step-input"
-                        placeholder="Enter your balance"
-                        disabled={isBalanceSet} // Disable input if balance is set
+                        placeholder="Enter your balance: $0"
+                        disabled={isBalanceSet}
+                        required
                     />
                 </label>
-                {!isBalanceSet && (
-                    <button type="submit" className="step-button">
-                        Set Balance
-                    </button>
-                )}
-            </form>
-            {isBalanceSet && (
-                <div className="balance-actions">
-                    <p className="balance-message">
-                        Balance set to ${amount}. You cannot change it anymore.
-                    </p>
+                <div className="buttons">
+                    {!isBalanceSet && (
+                        <button type="submit" className="step-button">
+                            Set Balance
+                        </button>
+                    )}
                     <button
+                        type="button"
                         className="step-button next-button"
                         onClick={handleNext}
+                        disabled={!isBalanceSet}
                     >
                         Next
                     </button>
                 </div>
-            )}
+            </form>
         </div>
     );
 };

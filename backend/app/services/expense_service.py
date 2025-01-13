@@ -4,9 +4,6 @@ from typing import List
 
 async def add_expense(request: Request, expense: Expense):
     state = request.app.state.budget_state
-    if expense.balance_id not in state.balances:
-        raise HTTPException(status_code=404, detail="Associated balance not found")
-
     expense.id = state.current_expense_id
     state.expenses[state.current_expense_id] = expense
     state.current_expense_id += 1

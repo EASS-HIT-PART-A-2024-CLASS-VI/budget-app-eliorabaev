@@ -26,7 +26,7 @@ const HomePage = () => {
                     </p>
                     <div className="buttons">
                         <button className="primary-button" onClick={handleTryNow}>
-                            Try Now
+                            Try It Now For Free!
                         </button>
                         <button className="secondary-button">Learn More</button>
                     </div>

@@ -46,6 +46,7 @@
     transform: scale(1.05);
 }
 
+
 @media (max-width: 600px) {
     .budget-steps-back-button {
         width: 100%; /* Full-width button for mobile */

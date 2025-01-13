@@ -41,25 +41,29 @@ docker-compose up
 The backend is implemented using FastAPI, offering a range of endpoints for managing finances. It is organized into microservices with a clean directory structure for scalability and maintainability.
 
 ### 📂 Directory Structure
-```
+```bash
 backend/
 ├── app/
 │   ├── main.py               # FastAPI application
-│   ├── unit_tests.py         # Unit tests for the application
 │   ├── state.py              # State management
 │   ├── requirements.txt      # Python dependencies
 │   ├── core/
 │   │   ├── config.py         # Configuration settings
 │   │   └── utils.py          # Utility functions
 │   ├── models/
-│   │   └── balance.py        # Data models for balance
+│   │   └── balance.py        # Data models for balance, income, and expense
 │   ├── routers/
 │   │   ├── balance.py        # API routes for balance
 │   │   ├── expense.py        # API routes for expenses
 │   │   ├── income.py         # API routes for income
 │   │   └── suggestions.py    # API routes for suggestions
+│   ├── services/
+│   │   ├── balance_service.py # Business logic for balance
+│   │   ├── expense_service.py # Business logic for expenses
+│   │   ├── income_service.py  # Business logic for incomes
+│   │   └── suggestion_service.py # Business logic for suggestions
 │   └── tests/
-│       └── unit_test.py      # Unit tests for FastAPI
+│       └── unit_tests.py     # Unit tests for the application
 ├── Dockerfile                # Docker configuration
 └── .gitignore                # Git ignore file
 ```

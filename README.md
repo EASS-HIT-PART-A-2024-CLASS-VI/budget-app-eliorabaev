@@ -18,7 +18,7 @@ This repository contains the **Budget App**, a full-stack application designed t
 
 ## 🗂️ Project Structure
 
-```
+```bash
 budget-app/
 ├── backend/     # Backend FastAPI service
 ├── frontend/    # Frontend React service
@@ -96,19 +96,19 @@ docker-compose up
 
 #### Balance
 - `POST /balance/` - Set the initial balance.
-  ```bash
-  curl -X POST "http://localhost:8000/balance/" -H "Content-Type: application/json" -d '{"amount": 1000}'
-  ```
+```bash
+curl -X POST "http://localhost:8000/balance/" -H "Content-Type: application/json" -d '{"amount": 1000}'
+```
 - `GET /balance/{balance_id}` - Retrieve the current balance.
-  ```bash
-  curl -X GET "http://localhost:8000/balance/1"
-  ```
+```bash
+curl -X GET "http://localhost:8000/balance/1"
+```
 
 #### Incomes
 - `POST /incomes/` - Add a new income source.
-  ```bash
-  curl -X POST "http://localhost:8000/incomes/" -H "Content-Type: application/json" -d '{"balance_id": 1, "source": "Job", "amount": 500}'
-  ```
+```bash
+curl -X POST "http://localhost:8000/incomes/" -H "Content-Type: application/json" -d '{"balance_id": 1, "source": "Job", "amount": 500}'
+```
 - `GET /incomes/{income_id}` - Retrieve an income source by ID.
   ```bash
   curl -X GET "http://localhost:8000/incomes/1"
@@ -116,13 +116,13 @@ docker-compose up
 
 #### Expenses
 - `POST /expenses/` - Add a new expense.
-  ```bash
-  curl -X POST "http://localhost:8000/expenses/" -H "Content-Type: application/json" -d '{"balance_id": 1, "category": "Food", "amount": 100}'
-  ```
+```bash
+curl -X POST "http://localhost:8000/expenses/" -H "Content-Type: application/json" -d '{"balance_id": 1, "category": "Food", "amount": 100}'
+```
 - `GET /expenses/{expense_id}` - Retrieve an expense by ID.
-  ```bash
-  curl -X GET "http://localhost:8000/expenses/1"
-  ```
+```bash
+curl -X GET "http://localhost:8000/expenses/1"
+```
 
 #### Suggestions
 - `GET /suggestions/{balance_id}` - Get financial suggestions based on the current balance.

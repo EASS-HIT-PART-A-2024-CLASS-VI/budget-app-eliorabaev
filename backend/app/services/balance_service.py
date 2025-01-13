@@ -19,8 +19,15 @@ async def update_balance(request: Request, balance_id: int, updated_balance: Bal
     budget_state = request.app.state.budget_state  # Access the app state
     balance = get_balance_or_404(budget_state, balance_id)  # Ensure the balance exists
 
-    # Update the balance amount
     balance.amount = updated_balance.amount
     budget_state.balances[balance_id] = balance  # Save the updated balance
 
     return balance  # Return the updated balance
+
+async def delete_balance(request: Request, balance_id: int):
+    budget_state = request.app.state.budget_state  # Access the app state
+    get_balance_or_404(budget_state, balance_id)
+    
+    del budget_state.balances[balance_id]
+    budget_state.incomes = {k: v for k, v in budget_state.incomes.items() if v.balance_id != balance_id}
+    budget_state.expenses = {k: v for k, v in budget_state.expenses.items() if v.balance_id != balance_id}

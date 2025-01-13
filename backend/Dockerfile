@@ -4,6 +4,9 @@ FROM python:3.12-slim
 # Set the working directory in the container to /app
 WORKDIR /app
 
+# Install build tools for dependencies (if required, e.g., for wheels)
+RUN apt-get update && apt-get install -y gcc && apt-get clean
+
 # Copy the requirements file into the working directory
 COPY ./app/requirements.txt /app/requirements.txt
 

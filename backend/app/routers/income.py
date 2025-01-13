@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request
-from models.balance import Income
+from models.balance import Income, UpdateIncome
 from typing import List
 from core.utils import get_balance_or_404
-from services.income_service import add_income, get_income_by_id, get_all_incomes
+from services.income_service import add_income, get_income_by_id, get_all_incomes, update_income, delete_income
 
 router = APIRouter()
 
@@ -19,3 +19,11 @@ async def retrieve_income(request: Request, income_id: int):
 @router.get("/", response_model=List[Income])
 async def retrieve_all_incomes(request: Request):
     return await get_all_incomes(request)
+
+@router.patch("/{income_id}", response_model=Income)
+async def update_income_endpoint(request: Request, income_id: int, updated_income: UpdateIncome):
+    return await update_income(request, income_id, updated_income)
+
+@router.delete("/{income_id}", status_code=204)
+async def delete_income_endpoint(request: Request, income_id: int):
+    await delete_income(request, income_id)

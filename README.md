@@ -137,7 +137,7 @@ docker-compose up
 The frontend is built with React, leveraging modern web technologies to deliver a responsive and interactive user experience.
 
 ### 📂 Directory Structure
-```
+```bash
 ├── Dockerfile                  # Docker configuration for containerizing the frontend app
 ├── package-lock.json           # Auto-generated file that locks dependencies for consistency
 ├── package.json                # Project metadata, scripts, and dependencies

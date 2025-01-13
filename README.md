@@ -134,38 +134,41 @@ The frontend is built with React, leveraging modern web technologies to deliver 
 
 ### 📂 Directory Structure
 ```
-├── Dockerfile                  # Docker configuration file for containerizing the frontend
-├── package-lock.json           # Automatically generated file that locks dependencies
-├── package.json                # Project metadata, scripts, and dependency management
-├── public                      # Public folder for static assets accessible without build tools
-│   └── index.html              # Main HTML file that serves as the entry point for the React app
+├── Dockerfile                  # Docker configuration for containerizing the frontend app
+├── package-lock.json           # Auto-generated file that locks dependencies for consistency
+├── package.json                # Project metadata, scripts, and dependencies
+├── public
+│   └── index.html              # Main HTML file as the entry point for the React app
 └── src                         # Source folder containing the application's main code
-    ├── App.js                  # Main application component, rendering routes and global layout
-    ├── ErrorBoundary.js        # Error boundary for catching and displaying UI errors
-    ├── api.js                  # API utilities for backend communication (e.g., HTTP requests)
-    ├── components              # Folder containing reusable React components
-    │   ├── Balance.js          # Displays and manages the user's current balance
-    │   ├── BudgetSteps.js      # Multi-step component guiding users through budgeting tasks
-    │   ├── Expense.js          # Displays and manages expense-related tasks
-    │   ├── Header.js           # Header component with navigation and branding
+    ├── App.js                  # Main React component, handling routes and global layout
+    ├── ErrorBoundary.js        # Error boundary to catch and display UI errors gracefully
+    ├── api.js                  # API utility functions for backend communication
+    ├── components              # Reusable React components
+    │   ├── AboutMe.js          # About Me page component with detailed professional info
+    │   ├── Balance.js          # Balance step for setting and displaying user balance
+    │   ├── BudgetSteps.js      # Multi-step budgeting process component
+    │   ├── Expense.js          # Expense management step in the budgeting flow
+    │   ├── Header.js           # Navigation header with logo and links
     │   ├── Homepage.js         # Homepage layout and content
-    │   ├── Income.js           # Displays and manages income-related tasks
-    │   └── Suggestions.js      # Displays financial suggestions based on balance data
-    ├── fonts                   # Folder containing custom font files
-    │   ├── Garet-Book.ttf      # Font file for regular text
-    │   └── Garet-Heavy.ttf     # Font file for bold or heavy text
-    ├── index.js                # Application's entry point, responsible for rendering `App.js`
-    └── static                  # Static assets folder for styling and images
-        ├── css                 # Folder containing all CSS files for styling the app
-        │   ├── BudgetSteps.css # Styles specific to the BudgetSteps component
+    │   ├── Income.js           # Income management step in the budgeting flow
+    │   └── Suggestions.js      # Suggestions step with financial advice based on user data
+    ├── fonts                   # Folder for custom fonts used in the app
+    │   ├── Garet-Book.ttf      # Font for regular text
+    │   └── Garet-Heavy.ttf     # Font for bold headings or emphasis
+    ├── index.js                # Application's entry point, rendering `App.js`
+    └── static                  # Static assets like CSS and images
+        ├── css                 # Stylesheets for various components and global styling
+        │   ├── AboutMe.css     # Styles for the About Me page
+        │   ├── BudgetSteps.css # Styles for the multi-step budgeting component
         │   ├── Header.css      # Styles for the Header component
         │   ├── Homepage.css    # Styles for the Homepage layout
-        │   ├── StepStyles.css  # Shared styles for all step-based components (e.g., Balance, Income)
-        │   └── index.css       # General application-wide styles
-        └── images              # Folder containing all image assets
+        │   ├── StepStyles.css  # Shared styles for step-based components like Balance, Income
+        │   ├── Suggestions.css # Styles for the Suggestions component
+        │   └── index.css       # Global application-wide styles
+        └── images              # Folder containing image assets
             ├── logo.png        # Main logo image for the app
-            ├── logo_clean.png  # Clean or simplified variant of the app logo
-            └── logo_header.png # Logo used in the header component
+            ├── logo_clean.png  # Clean version of the logo for specific use cases
+            └── logo_header.png # Logo variant used in the header
 ```
 
 ### 🛠️ Setup Instructions

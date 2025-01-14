@@ -13,24 +13,25 @@
     color: var(--text-color);
     box-sizing: border-box;
     margin-top: 0;
-    
-    .balance-warning {
-        color: rgb(255, 114, 114);
-        margin-bottom: 20px;
-    }
-    .balance-set {
-        margin-top: 50px;
-    }
+}
 
-    .dynamic-content {
-        min-height: 200px; /* Adjust based on the taller content */
-        display: flex;
-        flex-direction: column;
-        justify-content: center; /* Center content vertically */
-        align-items: center; /* Center content horizontally */
-        text-align: center;
-        margin-bottom: 20px; /* Space between content and form */
-    }
+.balance-warning {
+    color: rgb(255, 114, 114);
+    margin-bottom: 20px;
+}
+
+.balance-set {
+    margin-top: 50px;
+}
+
+.dynamic-content {
+    min-height: 200px; /* Adjust based on the taller content */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center content vertically */
+    align-items: center; /* Center content horizontally */
+    text-align: center;
+    margin-bottom: 20px; /* Space between content and form */
 }
 
 .step-title {
@@ -46,10 +47,11 @@
     gap: 20px; /* Even spacing between form elements */
     width: 100%; /* Take full container width */
     max-width: 500px; /* Limit maximum form width */
-    .buttons {
-        display: flex;
-        justify-content: end;
-    }
+}
+
+.buttons {
+    display: flex;
+    justify-content: end;
 }
 
 .step-input {
@@ -90,10 +92,11 @@
     width: 100%;
     text-align: left;
     max-width: 500px;
-    ul {
-        padding: 0;
-        list-style: none;
-    }
+}
+
+.list-container ul {
+    padding: 0;
+    list-style: none;
 }
 
 .list-item {
@@ -102,7 +105,83 @@
     padding: 10px 15px;
     display: flex;
     justify-content: space-between; /* Align content horizontally */
+    align-items: center;
     background-color: var(--background-color);
     border-radius: 6px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    height: 40px
+}
+
+.edit-container {
+    display: flex;
+    gap: 5rem; /* Space between input and buttons */
+}
+
+.edit-input {
+    width: 170px;
+    padding: 5px;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.edit-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.edit-button {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 5px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.3s ease;
+    font-size: 1em;
+}
+
+.edit-button:hover {
+    background-color: var(--button-bg-hover);
+    color: var(--text-color);
+    transform: scale(1.05);
+}
+
+.save-button {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 8px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 0.9em;
+}
+
+.save-button:hover {
+    background-color: var(--button-bg-hover);
+    transform: scale(1.05);
+}
+
+.save-button:active {
+    transform: scale(0.95);
+}
+
+.cancel-button {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: none;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: color 0.3s ease, transform 0.2s ease;
+    margin-left: 10px;
+}
+
+.cancel-button:hover {
+    color: var(--button-bg-hover);
+    transform: scale(1.05);
 }

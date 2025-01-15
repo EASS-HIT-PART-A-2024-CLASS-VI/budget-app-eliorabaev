@@ -11,6 +11,9 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # Copy the application code
 COPY . /app
 
+# Copy the .env file to the container
+COPY .env /app/.env
+
 # Expose the microservice port
 EXPOSE 8001
 

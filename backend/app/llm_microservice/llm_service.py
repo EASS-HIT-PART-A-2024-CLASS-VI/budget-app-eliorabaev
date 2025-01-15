@@ -1,17 +1,20 @@
 import google.generativeai as genai
 from dotenv import load_dotenv
 import os
+import logging
 
-# Load environment variables from the .env file
+# Load environment variables
 load_dotenv()
-
-# Fetch the Gemini API key securely
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not GEMINI_API_KEY:
     raise EnvironmentError("GEMINI_API_KEY is not set. Please configure it in the .env file.")
 
-# Configure the Gemini AI client
+# Configure logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
+# Configure Gemini API
 genai.configure(api_key=GEMINI_API_KEY)
 
 async def get_suggestions(data: dict):
@@ -19,44 +22,52 @@ async def get_suggestions(data: dict):
     Sends user financial data to Gemini AI via the google.generativeai library and fetches suggestions.
     """
     try:
+        logger.debug(f"Received data for suggestion generation: {data}")
+
+        # Extract user_data fields
+        user_data = data.get("user_data", {})
+        if not all(key in user_data for key in ["balance_id", "current_balance", "total_income", "total_expense"]):
+            raise ValueError("Missing required fields in user_data")
+
         # Prepare the prompt
         prompt = (
-            "You are a financial advisor assistant. Based on the user's financial data provided below, "
-            "analyze their financial situation and provide the most detailed, actionable, and personalized "
-            "suggestions for the user to improve their financial health.\n\n"
-            "Consider the following factors:\n"
-            "1. Current balance: Evaluate whether the user has enough savings, and provide advice on how to grow "
-            "or utilize this balance effectively.\n"
-            "2. Total income: Suggest ways to maximize or diversify income streams based on the provided income amount.\n"
-            "3. Total expense: Provide strategies to optimize or reduce expenses and identify potential areas for savings.\n\n"
-            "User Data:\n"
-            f"- Balance ID: {data['balance_id']}\n"
-            f"- Current Balance: ${data['current_balance']}\n"
-            f"- Total Income: ${data['total_income']}\n"
-            f"- Total Expense: ${data['total_expense']}\n\n"
-            "Your response should:\n"
-            "1. Start with a high-level analysis of the user's financial situation.\n"
-            "2. Offer specific suggestions for each category: balance, income, and expense.\n"
-            "3. Include practical steps the user can take to achieve financial improvement.\n\n"
-            "Be concise, yet informative and actionable. End with encouragement or a positive note to keep the user motivated."
+            f"You are a highly knowledgeable and empathetic financial advisor tasked with analyzing the user's financial situation "
+            f"and providing actionable, personalized advice to improve their financial health. The user data is as follows:\n\n"
+            f"**Balance ID:** {user_data['balance_id']}\n"
+            f"**Current Balance:** ${user_data['current_balance']}\n"
+            f"**Total Income:** ${user_data['total_income']}\n"
+            f"**Total Expense:** ${user_data['total_expense']}\n\n"
+            "Your response should be structured and cover the following aspects:\n\n"
+            "### 1. Financial Analysis:\n"
+            "- Provide an overview of the user's financial health, including their cash flow, savings adequacy, and any immediate risks.\n\n"
+            "### 2. Savings Optimization:\n"
+            "- Recommend strategies to optimize their current balance, such as building an emergency fund or reallocating resources effectively.\n\n"
+            "### 3. Income Diversification:\n"
+            "- Suggest specific ways to increase or diversify their income streams (e.g., freelancing, skill development, side hustles).\n\n"
+            "### 4. Expense Management:\n"
+            "- Identify areas to reduce discretionary spending without significantly affecting the quality of life.\n"
+            "- Provide guidance on creating a detailed budget and tracking expenses effectively.\n\n"
+            "### 5. Investment Strategies:\n"
+            "- Propose beginner-friendly investment options based on their financial situation (e.g., index funds, ETFs, or retirement accounts).\n"
+            "- Highlight the importance of long-term growth and risk management.\n\n"
+            "### 6. Motivational and Practical Next Steps:\n"
+            "- End your response with encouraging, practical advice to keep the user motivated to take action.\n"
+            "- Suggest tools, apps, or professionals they can consult to implement your recommendations effectively.\n\n"
+            "Use clear and concise language, structured as bullet points or sections for readability. Your advice should inspire confidence and focus on actionable outcomes."
         )
 
-        # Generate content using the Gemini model
+
+        # Generate content using Gemini AI
         model = genai.GenerativeModel(model_name="gemini-1.5-flash")
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                max_output_tokens=500,
-                temperature=0.7
-            )
-        )
+        response = model.generate_content(prompt)
 
-        # Extract and return suggestions
+        # Return suggestions
         if response and hasattr(response, "text"):
             return {"suggestions": response.text}
         else:
-            return {"error": "No suggestions generated by the Gemini AI."}
+            logger.error(f"Invalid Gemini response: {response}")
+            return {"error": "No suggestions generated by the Gemini API"}
 
     except Exception as e:
-        # Handle errors gracefully
+        logger.error(f"Gemini API error: {str(e)}")
         return {"error": f"Gemini API error: {str(e)}"}

@@ -185,3 +185,51 @@
     color: var(--button-bg-hover);
     transform: scale(1.05);
 }
+
+.suggestions-container {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    line-height: 1.6;
+}
+
+.suggestions-text {
+    white-space: pre-wrap; /* Ensure line breaks in the text are preserved */
+    font-size: 1em;
+}
+
+.step-button:disabled {
+    background-color: var(--button-bg-hover);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.suggestions-text h2 {
+    color: var(--primary-color);
+    font-size: 1.4em;
+    margin-bottom: 10px;
+}
+
+.suggestions-text ul {
+    padding-left: 20px;
+    margin-bottom: 10px;
+    list-style-type: disc;
+}
+
+.suggestions-text li {
+    margin-bottom: 5px;
+}
+
+.suggestions-text strong {
+    color: var(--accent-color);
+}
+
+.suggestions-text em {
+    color: var(--link-color);
+    font-style: italic;
+}

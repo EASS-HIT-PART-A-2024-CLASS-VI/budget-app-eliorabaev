@@ -55,5 +55,5 @@ export const deleteExpense = (expenseId) => {
 
 // Suggestions API
 export const getSuggestions = (balanceId) => {
-    return axios.get(`${API_BASE_URL}/suggestions/${balanceId}`);
+    return axios.post(`${API_BASE_URL}/suggestions/${balanceId}`);
 };

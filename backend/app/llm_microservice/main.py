@@ -6,3 +6,7 @@ app = FastAPI()
 @app.post("/suggestions/")
 async def get_llm_suggestions(data: dict):
     return await get_suggestions(data)
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}

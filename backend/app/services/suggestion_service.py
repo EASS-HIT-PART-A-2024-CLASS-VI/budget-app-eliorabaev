@@ -9,20 +9,19 @@ logger = logging.getLogger(__name__)
 
 LLM_MICROSERVICE_URL = "http://llm_microservice:8001/suggestions/"
 
-import logging
-import requests
-from fastapi import HTTPException
-
-logger = logging.getLogger(__name__)
-
-LLM_MICROSERVICE_URL = "http://llm_microservice:8001/suggestions/"
+# Session dictionary to store suggestions for each balance_id
+session_suggestions = {}
 
 async def generate_suggestions(financial_data: dict):
-    """
-    Sends user financial data to the LLM microservice and fetches suggestions.
-    """
+    balance_id = financial_data["balance_id"]
+
+    # Check if suggestions already exist for the session
+    if balance_id in session_suggestions:
+        logger.debug(f"Returning cached suggestions for balance_id: {balance_id}")
+        return session_suggestions[balance_id]
+
     try:
-        # Send POST request to the LLM microservice
+        # Call the LLM microservice to fetch suggestions
         logger.debug(f"Sending data to LLM microservice: {financial_data}")
         response = requests.post(
             LLM_MICROSERVICE_URL,
@@ -30,25 +29,14 @@ async def generate_suggestions(financial_data: dict):
         )
         response.raise_for_status()
 
-        # Parse response
-        raw_response = response.text.strip()
-        logger.debug(f"Raw LLM microservice response: {raw_response}")
+        llm_response = response.json()
+        logger.debug(f"LLM microservice response: {llm_response}")
 
-        # Handle trailing characters like "%"
-        if raw_response.endswith("%"):
-            raw_response = raw_response[:-1]
-            logger.warning("Stripped trailing '%' from the LLM response")
-
-        # Attempt to parse JSON
-        try:
-            llm_response = response.json()
-        except ValueError:
-            logger.error(f"Failed to parse JSON from LLM response: {raw_response}")
-            raise HTTPException(status_code=500, detail="LLM response is not valid JSON")
-
-        # Validate and return suggestions
+        # Validate response format
         if "suggestions" in llm_response:
-            return llm_response["suggestions"]
+            suggestions = llm_response["suggestions"]
+            session_suggestions[balance_id] = suggestions  # Cache suggestions in session
+            return suggestions
         else:
             logger.error(f"Invalid response format: {llm_response}")
             raise HTTPException(status_code=500, detail="Invalid response format from LLM microservice")

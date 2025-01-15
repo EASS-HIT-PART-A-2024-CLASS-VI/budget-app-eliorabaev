@@ -199,8 +199,13 @@
 }
 
 .suggestions-text {
-    white-space: pre-wrap; /* Ensure line breaks in the text are preserved */
-    font-size: 1em;
+    margin-top: 20px;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: left;
 }
 
 .step-button:disabled {
@@ -209,15 +214,15 @@
     opacity: 0.7;
 }
 
-.suggestions-text h2 {
+.suggestions-text h1,
+.suggestions-text h2,
+.suggestions-text h3 {
     color: var(--primary-color);
-    font-size: 1.4em;
     margin-bottom: 10px;
 }
 
 .suggestions-text ul {
-    padding-left: 20px;
-    margin-bottom: 10px;
+    margin-left: 20px;
     list-style-type: disc;
 }
 
@@ -232,4 +237,8 @@
 .suggestions-text em {
     color: var(--link-color);
     font-style: italic;
+}
+
+.suggestions-text p {
+    margin-bottom: 10px;
 }

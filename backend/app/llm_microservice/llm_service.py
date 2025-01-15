@@ -31,17 +31,31 @@ async def get_suggestions(data: dict):
 
         # Prepare the prompt
         prompt = (
-            f"Based on the user's financial data, provide detailed, actionable, and personalized suggestions:\n\n"
-            f"Balance ID: {user_data['balance_id']}\n"
-            f"Current Balance: ${user_data['current_balance']}\n"
-            f"Total Income: ${user_data['total_income']}\n"
-            f"Total Expense: ${user_data['total_expense']}\n\n"
-            "Suggestions should include:\n"
-            "1. Analysis of the user's financial situation.\n"
-            "2. Steps to optimize savings and investments.\n"
-            "3. Strategies to reduce expenses or increase income.\n\n"
-            "Be concise and end with motivational advice."
+            f"You are a highly knowledgeable and empathetic financial advisor tasked with analyzing the user's financial situation "
+            f"and providing actionable, personalized advice to improve their financial health. The user data is as follows:\n\n"
+            f"**Balance ID:** {user_data['balance_id']}\n"
+            f"**Current Balance:** ${user_data['current_balance']}\n"
+            f"**Total Income:** ${user_data['total_income']}\n"
+            f"**Total Expense:** ${user_data['total_expense']}\n\n"
+            "Your response should be structured and cover the following aspects:\n\n"
+            "### 1. Financial Analysis:\n"
+            "- Provide an overview of the user's financial health, including their cash flow, savings adequacy, and any immediate risks.\n\n"
+            "### 2. Savings Optimization:\n"
+            "- Recommend strategies to optimize their current balance, such as building an emergency fund or reallocating resources effectively.\n\n"
+            "### 3. Income Diversification:\n"
+            "- Suggest specific ways to increase or diversify their income streams (e.g., freelancing, skill development, side hustles).\n\n"
+            "### 4. Expense Management:\n"
+            "- Identify areas to reduce discretionary spending without significantly affecting the quality of life.\n"
+            "- Provide guidance on creating a detailed budget and tracking expenses effectively.\n\n"
+            "### 5. Investment Strategies:\n"
+            "- Propose beginner-friendly investment options based on their financial situation (e.g., index funds, ETFs, or retirement accounts).\n"
+            "- Highlight the importance of long-term growth and risk management.\n\n"
+            "### 6. Motivational and Practical Next Steps:\n"
+            "- End your response with encouraging, practical advice to keep the user motivated to take action.\n"
+            "- Suggest tools, apps, or professionals they can consult to implement your recommendations effectively.\n\n"
+            "Use clear and concise language, structured as bullet points or sections for readability. Your advice should inspire confidence and focus on actionable outcomes."
         )
+
 
         # Generate content using Gemini AI
         model = genai.GenerativeModel(model_name="gemini-1.5-flash")

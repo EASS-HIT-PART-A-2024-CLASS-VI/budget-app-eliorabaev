@@ -10,6 +10,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - llm_microservice # Ensure LLM microservice starts before the backend
 
   frontend:
     build:
@@ -19,3 +21,10 @@ services:
       - "3000:3000" # Map port 3000 on the host to port 3000 in the container
     depends_on:
       - backend # Ensure the backend service is started before the frontend
+
+  llm_microservice:
+    build:
+      context: ./backend/app/llm_microservice # Path to the LLM microservice
+    container_name: llm-microservice
+    ports:
+      - "8001:8001"

@@ -19,9 +19,21 @@ class Suggestion(BaseModel):
         ge=1,  # Minimum value is 1
         le=10  # Maximum value is 10
     )
+    impact: Optional[str] = Field(
+        None,
+        description="The potential financial impact of the suggestion, e.g., 'High', 'Medium', 'Low'."
+    )
+    level_of_effort: Optional[str] = Field(
+        None,
+        description="The effort required to implement the suggestion, e.g., 'Low', 'Medium', 'High'."
+    )
     actionable: Optional[bool] = Field(
         default=True, 
         description="Whether this suggestion is immediately actionable by the user."
+    )
+    steps: Optional[List[str]] = Field(
+        default=[],
+        description="Specific steps to implement the suggestion."
     )
     reference_url: Optional[str] = Field(
         None, 
@@ -42,6 +54,26 @@ class Analysis(BaseModel):
     warnings: Optional[List[str]] = Field(
         default=[], 
         description="Optional warnings or red flags identified in the user's financial data."
+    )
+
+
+class SWOT(BaseModel):
+    # SWOT analysis of the user's financial situation
+    strengths: List[str] = Field(
+        ..., 
+        description="Strengths in the user's financial situation."
+    )
+    weaknesses: List[str] = Field(
+        ..., 
+        description="Weaknesses in the user's financial situation."
+    )
+    opportunities: List[str] = Field(
+        ..., 
+        description="Opportunities for improving the user's financial situation."
+    )
+    threats: List[str] = Field(
+        ..., 
+        description="Potential threats or risks in the user's financial situation."
     )
 
 
@@ -70,6 +102,10 @@ class LLMResponse(BaseModel):
     analysis: Analysis = Field(
         ..., 
         description="High-level financial analysis provided by the LLM."
+    )
+    swot: SWOT = Field(
+        ..., 
+        description="SWOT analysis of the user's financial situation."
     )
     suggestions: List[Suggestion] = Field(
         ..., 

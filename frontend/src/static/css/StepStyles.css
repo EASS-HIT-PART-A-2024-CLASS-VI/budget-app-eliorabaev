@@ -265,3 +265,82 @@
 .suggestions-container .suggestion-item a:hover {
     color: var(--link-hover-color);
 }
+
+/* SWOT Analysis */
+.swot-container {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.swot-section {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border-radius: 10px;
+    line-height: 1.8;
+    max-width: 700px;
+    width: 90%;
+    text-align: left;
+}
+
+.swot-section strong {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--accent-color);
+    font-size: 1.2rem;
+}
+
+.swot-section ul {
+    list-style-type: disc;
+    margin-left: 20px;
+}
+
+.swot-section ul li {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+/* Priority Badges */
+.priority-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.priority-high {
+    background-color: var(--error-color); /* High priority: Red */
+}
+
+.priority-medium {
+    background-color: var(--link-color); /* Medium priority: Purple */
+}
+
+.priority-low {
+    background-color: var(--accent-color); /* Low priority: Green */
+}
+
+/* Impact and Effort Indicators */
+.indicator {
+    display: inline-block;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    margin-right: 5px;
+    border-radius: 5px;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.indicator-impact {
+    background-color: var(--primary-color); /* Impact: Blue */
+}
+
+.indicator-effort {
+    background-color: var(--link-color); /* Effort: Purple */
+}

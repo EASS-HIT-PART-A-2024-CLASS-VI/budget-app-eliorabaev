@@ -101,7 +101,6 @@ const Suggestions = () => {
             )}
             {swot && (
                 <div className="swot-container">
-                    <h3>SWOT Analysis</h3>
                     <div className="swot-section">
                         <strong>Strengths:</strong>
                         <ul>

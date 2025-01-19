@@ -30,7 +30,26 @@ budget-app/
 
 ---
 
+## 🔑 Setting Up the .env File
+
+To use the LLM-powered suggestions feature, you need to provide an API key for Google Gemini AI.
+
+1. Visit [Google AI Studio](https://aistudio.google.com/apikey) to obtain your API key.
+2. Create a `.env` file in the `backend/app/llm_microservice` directory.
+3. Add the following line to the `.env` file, replacing `<YOUR_API_KEY>` with your actual key:
+
+    ```plaintext
+    GEMINI_API_KEY=<YOUR_API_KEY>
+    ```
+
+4. Ensure the `.env` file is not accidentally committed to version control by adding it to `.gitignore`.
+This API key is required to enable the financial suggestion feature powered by Google Gemini AI.
+
+---
+
 ## 🐳 Docker Deployment
+#### Prerequisites
+- Docker installed on your machine.
 
 Run the entire project (frontend and backend) with a single command:
 

@@ -36,7 +36,7 @@ async def generate_suggestions(financial_data: dict):
 
         # Parse the JSON response
         llm_response = response.json()
-        logger.info(f"Received response from LLM microservice: {llm_response}")
+        logger.info(f"Received response from LLM microservice")
 
         return llm_response
 

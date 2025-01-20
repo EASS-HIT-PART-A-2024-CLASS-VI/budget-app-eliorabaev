@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Path, Request
 from services.suggestion_service import fetch_financial_data, generate_suggestions
-from llm_microservice.schemas import LLMResponse
+from llm_microservice.app.models.schemas import LLMResponse
 import logging
 
 # Configure logging for the router

@@ -1,9 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-
 class Suggestion(BaseModel):
-    # Represents a single suggestion from the LLM
     category: str = Field(
         ..., 
         description="The category of the suggestion, e.g., 'Analysis', 'Savings', 'Investing'.",
@@ -40,9 +38,7 @@ class Suggestion(BaseModel):
         description="A reference link for further reading or resources."
     )
 
-
 class Analysis(BaseModel):
-    # High-level analysis of the user's financial situation
     cash_flow_status: str = Field(
         ..., 
         description="A description of the user's cash flow status, e.g., 'Positive', 'Negative', or 'Neutral'."
@@ -56,9 +52,7 @@ class Analysis(BaseModel):
         description="Optional warnings or red flags identified in the user's financial data."
     )
 
-
 class SWOT(BaseModel):
-    # SWOT analysis of the user's financial situation
     strengths: List[str] = Field(
         ..., 
         description="Strengths in the user's financial situation."
@@ -76,9 +70,7 @@ class SWOT(BaseModel):
         description="Potential threats or risks in the user's financial situation."
     )
 
-
 class LLMResponse(BaseModel):
-    # Represents the structured response from the LLM
     balance_id: int = Field(
         ..., 
         description="The balance ID associated with these suggestions.",

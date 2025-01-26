@@ -10,6 +10,11 @@ const HomePage = () => {
         navigate('/budget-steps');
     };
 
+    const handleAboutClick = () => {
+        navigate("/about"); // Navigate to the About Me page
+    };
+
+
     return (
         <main className="homepage">
             <div className="content">
@@ -28,7 +33,7 @@ const HomePage = () => {
                         <button className="primary-button" onClick={handleTryNow}>
                             Try It Now For Free!
                         </button>
-                        <button className="secondary-button">Learn More</button>
+                        <button className="secondary-button" onClick={handleAboutClick}>About me</button>
                     </div>
                 </div>
                 <div className="right">

@@ -5,10 +5,10 @@
     justify-content: flex-start;
     min-height: 100vh;
     padding-top: 80px; /* Space for fixed header */
-    background-color: var(--background-color);
+    background: linear-gradient(135deg, #1e2336, #0D7377); /* Dark gradient background */
     box-sizing: border-box;
     width: 100%;
-    
+
     header {
         display: flex;
         flex-direction: column;
@@ -45,7 +45,6 @@
     background-color: var(--button-bg-hover);
     transform: scale(1.05);
 }
-
 
 @media (max-width: 600px) {
     .budget-steps-back-button {

@@ -4,7 +4,8 @@ from typing import Optional  # Import Optional for optional fields
 class Balance(BaseModel):
     # Define the Balance model with an optional ID and amount
     id: Optional[int] = Field(default=None, description="The ID of the balance")
-    amount: float
+    amount: float = Field(gt=0, description="The balance amount must be greater than zero")
+
 
 class Income(BaseModel):
     # Define the Income model with an optional ID, balance ID, source, and amount

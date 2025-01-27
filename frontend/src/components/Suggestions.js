@@ -12,7 +12,6 @@ const Suggestions = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        // Check if suggestions and analysis are already stored in sessionStorage
         const storedSuggestions = sessionStorage.getItem('suggestions');
         const storedAnalysis = sessionStorage.getItem('analysis');
         const storedSwot = sessionStorage.getItem('swot');
@@ -21,21 +20,21 @@ const Suggestions = () => {
             setSuggestions(JSON.parse(storedSuggestions));
             setAnalysis(JSON.parse(storedAnalysis));
             setSwot(JSON.parse(storedSwot));
-            setDisabled(true); // Disable the button since data already exists
+            setDisabled(true);
         } else {
-            fetchExistingSuggestions(); // Fetch from backend if not in sessionStorage
+            fetchExistingSuggestions();
         }
     }, []);
 
     const fetchExistingSuggestions = async () => {
-        const hardcodedBalanceId = 1; // Replace with dynamic balance ID if applicable
+        const hardcodedBalanceId = 1;
         try {
             const response = await getSuggestions(hardcodedBalanceId);
             if (response.data.suggestions) {
                 setSuggestions(response.data.suggestions);
                 setAnalysis(response.data.analysis);
                 setSwot(response.data.swot);
-                setDisabled(true); // Disable button after successful fetch
+                setDisabled(true);
                 sessionStorage.setItem('suggestions', JSON.stringify(response.data.suggestions));
                 sessionStorage.setItem('analysis', JSON.stringify(response.data.analysis));
                 sessionStorage.setItem('swot', JSON.stringify(response.data.swot));
@@ -47,7 +46,7 @@ const Suggestions = () => {
     };
 
     const fetchSuggestions = async () => {
-        const hardcodedBalanceId = 1; // Replace with dynamic balance ID if applicable
+        const hardcodedBalanceId = 1;
         setLoading(true);
         setError('');
         try {
@@ -59,7 +58,7 @@ const Suggestions = () => {
             setSuggestions(fetchedSuggestions);
             setAnalysis(fetchedAnalysis);
             setSwot(fetchedSwot);
-            setDisabled(true); // Disable button after successful fetch
+            setDisabled(true);
             sessionStorage.setItem('suggestions', JSON.stringify(fetchedSuggestions));
             sessionStorage.setItem('analysis', JSON.stringify(fetchedAnalysis));
             sessionStorage.setItem('swot', JSON.stringify(fetchedSwot));
@@ -85,9 +84,13 @@ const Suggestions = () => {
             {analysis && (
                 <div className="analysis-container">
                     <h3>Analysis</h3>
-                    <p><strong>Cash Flow Status:</strong> {analysis.cash_flow_status}</p>
-                    <p><strong>Summary:</strong> {analysis.summary}</p>
-                    {analysis.warnings.length > 0 && (
+                    {analysis.cash_flow_status && (
+                        <p><strong>Cash Flow Status:</strong> {analysis.cash_flow_status}</p>
+                    )}
+                    {analysis.summary && (
+                        <p><strong>Summary:</strong> {analysis.summary}</p>
+                    )}
+                    {analysis.warnings && analysis.warnings.length > 0 && (
                         <>
                             <strong className="warnings">Warnings:</strong>
                             <ul>
@@ -101,38 +104,46 @@ const Suggestions = () => {
             )}
             {swot && (
                 <div className="swot-container">
-                    <div className="swot-section">
-                        <strong>Strengths:</strong>
-                        <ul>
-                            {swot.strengths.map((strength, index) => (
-                                <li key={index}>{strength}</li>
-                            ))}
-                        </ul>
-                    </div>
-                    <div className="swot-section">
-                        <strong>Weaknesses:</strong>
-                        <ul>
-                            {swot.weaknesses.map((weakness, index) => (
-                                <li key={index}>{weakness}</li>
-                            ))}
-                        </ul>
-                    </div>
-                    <div className="swot-section">
-                        <strong>Opportunities:</strong>
-                        <ul>
-                            {swot.opportunities.map((opportunity, index) => (
-                                <li key={index}>{opportunity}</li>
-                            ))}
-                        </ul>
-                    </div>
-                    <div className="swot-section">
-                        <strong>Threats:</strong>
-                        <ul>
-                            {swot.threats.map((threat, index) => (
-                                <li key={index}>{threat}</li>
-                            ))}
-                        </ul>
-                    </div>
+                    {swot.strengths && (
+                        <div className="swot-section">
+                            <strong>Strengths:</strong>
+                            <ul>
+                                {swot.strengths.map((strength, index) => (
+                                    <li key={index}>{strength}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    {swot.weaknesses && (
+                        <div className="swot-section">
+                            <strong>Weaknesses:</strong>
+                            <ul>
+                                {swot.weaknesses.map((weakness, index) => (
+                                    <li key={index}>{weakness}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    {swot.opportunities && (
+                        <div className="swot-section">
+                            <strong>Opportunities:</strong>
+                            <ul>
+                                {swot.opportunities.map((opportunity, index) => (
+                                    <li key={index}>{opportunity}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    {swot.threats && (
+                        <div className="swot-section">
+                            <strong>Threats:</strong>
+                            <ul>
+                                {swot.threats.map((threat, index) => (
+                                    <li key={index}>{threat}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
             )}
             <div className="suggestions-container">
@@ -142,11 +153,21 @@ const Suggestions = () => {
                         <ul className="suggestions-list">
                             {suggestions.map((suggestion, index) => (
                                 <li key={index} className="suggestion-item">
-                                    <strong>{suggestion.category}:</strong>
-                                    <ReactMarkdown>{suggestion.details}</ReactMarkdown>
-                                    <p><strong>Priority:</strong> {suggestion.priority}</p>
-                                    {suggestion.impact && <p><strong>Impact:</strong> {suggestion.impact}</p>}
-                                    {suggestion.level_of_effort && <p><strong>Effort Level:</strong> {suggestion.level_of_effort}</p>}
+                                    {suggestion.category && (
+                                        <strong>{suggestion.category}:</strong>
+                                    )}
+                                    {suggestion.details && (
+                                        <ReactMarkdown>{suggestion.details}</ReactMarkdown>
+                                    )}
+                                    {suggestion.priority && (
+                                        <p><strong>Priority:</strong> {suggestion.priority}</p>
+                                    )}
+                                    {suggestion.impact && (
+                                        <p><strong>Impact:</strong> {suggestion.impact}</p>
+                                    )}
+                                    {suggestion.level_of_effort && (
+                                        <p><strong>Effort Level:</strong> {suggestion.level_of_effort}</p>
+                                    )}
                                     {suggestion.steps && suggestion.steps.length > 0 && (
                                         <ul>
                                             {suggestion.steps.map((step, stepIndex) => (

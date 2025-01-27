@@ -100,11 +100,21 @@ const Suggestions = () => {
                             </ul>
                         </>
                     )}
+                    {analysis.positives && analysis.positives.length > 0 && (
+                        <>
+                            <strong className="positives">Positives:</strong>
+                            <ul>
+                                {analysis.positives.map((positive, index) => (
+                                    <li key={index}>{positive}</li>
+                                ))}
+                            </ul>
+                        </>
+                    )}
                 </div>
             )}
             {swot && (
                 <div className="swot-container">
-                    {swot.strengths && (
+                    {swot.strengths && swot.strengths.length > 0 && (
                         <div className="swot-section">
                             <strong>Strengths:</strong>
                             <ul>
@@ -114,7 +124,7 @@ const Suggestions = () => {
                             </ul>
                         </div>
                     )}
-                    {swot.weaknesses && (
+                    {swot.weaknesses && swot.weaknesses.length > 0 && (
                         <div className="swot-section">
                             <strong>Weaknesses:</strong>
                             <ul>
@@ -124,7 +134,7 @@ const Suggestions = () => {
                             </ul>
                         </div>
                     )}
-                    {swot.opportunities && (
+                    {swot.opportunities && swot.opportunities.length > 0 && (
                         <div className="swot-section">
                             <strong>Opportunities:</strong>
                             <ul>
@@ -134,7 +144,7 @@ const Suggestions = () => {
                             </ul>
                         </div>
                     )}
-                    {swot.threats && (
+                    {swot.threats && swot.threats.length > 0 && (
                         <div className="swot-section">
                             <strong>Threats:</strong>
                             <ul>
@@ -146,51 +156,49 @@ const Suggestions = () => {
                     )}
                 </div>
             )}
-            <div className="suggestions-container">
-                {suggestions.length > 0 ? (
-                    <>
-                        <h3>Suggestions</h3>
-                        <ul className="suggestions-list">
-                            {suggestions.map((suggestion, index) => (
-                                <li key={index} className="suggestion-item">
-                                    {suggestion.category && (
-                                        <strong>{suggestion.category}:</strong>
-                                    )}
-                                    {suggestion.details && (
-                                        <ReactMarkdown>{suggestion.details}</ReactMarkdown>
-                                    )}
-                                    {suggestion.priority && (
-                                        <p><strong>Priority:</strong> {suggestion.priority}</p>
-                                    )}
-                                    {suggestion.impact && (
-                                        <p><strong>Impact:</strong> {suggestion.impact}</p>
-                                    )}
-                                    {suggestion.level_of_effort && (
-                                        <p><strong>Effort Level:</strong> {suggestion.level_of_effort}</p>
-                                    )}
-                                    {suggestion.steps && suggestion.steps.length > 0 && (
-                                        <ul>
-                                            {suggestion.steps.map((step, stepIndex) => (
-                                                <li key={stepIndex}>{step}</li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                    {suggestion.reference_url && (
-                                        <p>
-                                            <strong>Learn More:</strong>{' '}
-                                            <a href={suggestion.reference_url} target="_blank" rel="noopener noreferrer">
-                                                {suggestion.reference_url}
-                                            </a>
-                                        </p>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    </>
-                ) : (
-                    <p>No suggestions available yet.</p>
-                )}
-            </div>
+            {suggestions.length > 0 ? (
+                <div className="suggestions-container">
+                    <h3>Suggestions</h3>
+                    <ul className="suggestions-list">
+                        {suggestions.map((suggestion, index) => (
+                            <li key={index} className="suggestion-item">
+                                {suggestion.category && (
+                                    <strong>{suggestion.category}:</strong>
+                                )}
+                                {suggestion.details && (
+                                    <ReactMarkdown>{suggestion.details}</ReactMarkdown>
+                                )}
+                                {suggestion.priority && (
+                                    <p><strong>Priority:</strong> {suggestion.priority}</p>
+                                )}
+                                {suggestion.impact && (
+                                    <p><strong>Impact:</strong> {suggestion.impact}</p>
+                                )}
+                                {suggestion.level_of_effort && (
+                                    <p><strong>Effort Level:</strong> {suggestion.level_of_effort}</p>
+                                )}
+                                {suggestion.steps && suggestion.steps.length > 0 && (
+                                    <ul>
+                                        {suggestion.steps.map((step, stepIndex) => (
+                                            <li key={stepIndex}>{step}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                                {suggestion.reference_url && (
+                                    <p>
+                                        <strong>Learn More:</strong>{' '}
+                                        <a href={suggestion.reference_url} target="_blank" rel="noopener noreferrer">
+                                            {suggestion.reference_url}
+                                        </a>
+                                    </p>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ) : (
+                <p>No suggestions available yet.</p>
+            )}
         </div>
     );
 };

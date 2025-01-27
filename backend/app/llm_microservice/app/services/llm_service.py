@@ -96,4 +96,3 @@ async def get_suggestions(data: dict) -> dict:
     except Exception as e:
         logger.error(f"LLM API error: {str(e)}")
         raise Exception(f"LLM API error: {str(e)}")
-

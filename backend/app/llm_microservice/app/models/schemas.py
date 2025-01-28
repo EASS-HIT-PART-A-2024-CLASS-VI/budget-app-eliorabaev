@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from datetime import datetime
 
 class Suggestion(BaseModel):
     category: str = Field(
@@ -51,22 +52,26 @@ class Analysis(BaseModel):
         default=[], 
         description="Optional warnings or red flags identified in the user's financial data."
     )
+    positives: Optional[List[str]] = Field(
+        default=[],
+        description="Optional positives or highlights in the user's financial data."
+    )
 
 class SWOT(BaseModel):
     strengths: List[str] = Field(
-        ..., 
+        default=[],
         description="Strengths in the user's financial situation."
     )
     weaknesses: List[str] = Field(
-        ..., 
+        default=[],
         description="Weaknesses in the user's financial situation."
     )
     opportunities: List[str] = Field(
-        ..., 
+        default=[],
         description="Opportunities for improving the user's financial situation."
     )
     threats: List[str] = Field(
-        ..., 
+        default=[],
         description="Potential threats or risks in the user's financial situation."
     )
 
@@ -100,10 +105,10 @@ class LLMResponse(BaseModel):
         description="SWOT analysis of the user's financial situation."
     )
     suggestions: List[Suggestion] = Field(
-        ..., 
+        default=[],
         description="A list of structured financial suggestions ordered by priority."
     )
-    generated_at: Optional[str] = Field(
-        None, 
+    generated_at: str = Field(
+        default_factory=lambda: datetime.utcnow().isoformat(),
         description="Timestamp indicating when the response was generated."
     )

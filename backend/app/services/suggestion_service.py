@@ -15,10 +15,15 @@ session_suggestions = {}
 
 # Sends user financial data to the LLM microservice and retrieves structured suggestions
 async def generate_suggestions(financial_data: dict):
-    # Required keys for financial data
-    required_keys = ["balance_id", "current_balance", "total_income", "total_expense"]
+    balance_id = financial_data["balance_id"]
+
+    # Check if suggestions are already in session storage
+    if balance_id in session_suggestions:
+        logger.info(f"Returning cached suggestions for balance_id {balance_id}")
+        return session_suggestions[balance_id]
 
     # Validate financial_data
+    required_keys = ["balance_id", "current_balance", "total_income", "total_expense"]
     missing_keys = [key for key in required_keys if key not in financial_data]
     if missing_keys:
         logger.error(f"Missing keys in financial_data: {missing_keys}")
@@ -28,16 +33,15 @@ async def generate_suggestions(financial_data: dict):
 
     try:
         # Make a POST request to the LLM microservice
-        response = requests.post(
-            LLM_MICROSERVICE_URL,
-            json=financial_data
-        )
+        response = requests.post(LLM_MICROSERVICE_URL, json=financial_data)
         response.raise_for_status()
 
         # Parse the JSON response
         llm_response = response.json()
         logger.info(f"Received response from LLM microservice")
 
+        # Store suggestions in session storage
+        session_suggestions[balance_id] = llm_response
         return llm_response
 
     except requests.RequestException as e:

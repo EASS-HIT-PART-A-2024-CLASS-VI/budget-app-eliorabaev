@@ -46,13 +46,23 @@ const Expense = ({ onSubmit }) => {
     };
 
     const handleEditChange = (e) => {
-        setEditAmount(e.target.value);
+        const value = e.target.value;
+    
+        // Allow empty input or positive integer only
+        if (value === '' || (/^[0-9]+$/.test(value) && parseInt(value, 10) >= 0)) {
+            setEditAmount(value);
+        } else {
+            alert('Please enter a positive integer amount.');
+        }
     };
 
     const handleEditSave = async (id) => {
         try {
-            await updateExpense(id, { amount: parseFloat(editAmount) }); // Update the expense amount
-            setExpenses(expenses.map((exp) => (exp.id === id ? { ...exp, amount: parseFloat(editAmount) } : exp))); // Update state
+            // Use 0 as the default value if the field is empty
+            const newAmount = editAmount === '' ? 0 : parseFloat(editAmount);
+    
+            await updateExpense(id, { amount: newAmount }); // Update the expense amount
+            setExpenses(expenses.map((exp) => (exp.id === id ? { ...exp, amount: newAmount } : exp))); // Update state
             setEditId(null); // Exit edit mode
         } catch (error) {
             console.error('Error updating expense:', error);

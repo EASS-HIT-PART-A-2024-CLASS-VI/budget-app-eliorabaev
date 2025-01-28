@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSuggestions } from '../api';
+import { getSuggestions, getCachedSuggestions } from '../api';
 import ReactMarkdown from 'react-markdown';
 import '../static/css/StepStyles.css';
 
@@ -12,61 +12,44 @@ const Suggestions = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const storedSuggestions = sessionStorage.getItem('suggestions');
-        const storedAnalysis = sessionStorage.getItem('analysis');
-        const storedSwot = sessionStorage.getItem('swot');
-
-        if (storedSuggestions && storedAnalysis && storedSwot) {
-            setSuggestions(JSON.parse(storedSuggestions));
-            setAnalysis(JSON.parse(storedAnalysis));
-            setSwot(JSON.parse(storedSwot));
-            setDisabled(true);
-        } else {
-            fetchExistingSuggestions();
-        }
+        // Fetch cached suggestions on component mount
+        fetchCachedSuggestions();
     }, []);
 
-    const fetchExistingSuggestions = async () => {
-        const hardcodedBalanceId = 1;
+    const fetchCachedSuggestions = async () => {
+        const balanceId = 1; // Hardcoded balance ID for now
         try {
-            const response = await getSuggestions(hardcodedBalanceId);
+            const response = await getCachedSuggestions(balanceId);
             if (response.data.suggestions) {
                 setSuggestions(response.data.suggestions);
                 setAnalysis(response.data.analysis);
                 setSwot(response.data.swot);
-                setDisabled(true);
-                sessionStorage.setItem('suggestions', JSON.stringify(response.data.suggestions));
-                sessionStorage.setItem('analysis', JSON.stringify(response.data.analysis));
-                sessionStorage.setItem('swot', JSON.stringify(response.data.swot));
+                setDisabled(true); // Disable the button if cached data exists
             }
         } catch (error) {
-            console.error('Error fetching existing suggestions:', error.response?.data || error.message);
-            setError('Failed to fetch suggestions. Please try again later.');
+            console.error('Error fetching cached suggestions:', error.message);
+            setError('No cached suggestions found. Please generate new suggestions.');
         }
     };
 
     const fetchSuggestions = async () => {
-        const hardcodedBalanceId = 1;
+        const balanceId = 1; // Hardcoded balance ID for now
         setLoading(true);
         setError('');
         try {
-            const response = await getSuggestions(hardcodedBalanceId);
-            const fetchedSuggestions = response.data.suggestions || [];
-            const fetchedAnalysis = response.data.analysis || null;
-            const fetchedSwot = response.data.swot || null;
+            const response = await getSuggestions(balanceId);
+            const { suggestions, analysis, swot } = response.data;
 
-            setSuggestions(fetchedSuggestions);
-            setAnalysis(fetchedAnalysis);
-            setSwot(fetchedSwot);
-            setDisabled(true);
-            sessionStorage.setItem('suggestions', JSON.stringify(fetchedSuggestions));
-            sessionStorage.setItem('analysis', JSON.stringify(fetchedAnalysis));
-            sessionStorage.setItem('swot', JSON.stringify(fetchedSwot));
+            // Set state with the fetched data
+            setSuggestions(suggestions || []);
+            setAnalysis(analysis || null);
+            setSwot(swot || null);
+            setDisabled(true); // Disable the button after fetching
         } catch (error) {
             console.error('Error fetching suggestions:', error.response?.data || error.message);
             setError('Failed to fetch suggestions. Please try again later.');
         } finally {
-            setLoading(false);
+            setLoading(false); // Stop loading spinner
         }
     };
 
@@ -81,6 +64,7 @@ const Suggestions = () => {
                 {loading ? 'Loading...' : disabled ? 'Suggestions Loaded' : 'Get Suggestions'}
             </button>
             {error && <p className="error-message">{error}</p>}
+
             {analysis && (
                 <div className="analysis-container">
                     <h3>Analysis</h3>
@@ -112,6 +96,7 @@ const Suggestions = () => {
                     )}
                 </div>
             )}
+
             {swot && (
                 <div className="swot-container">
                     {swot.strengths && swot.strengths.length > 0 && (
@@ -156,6 +141,7 @@ const Suggestions = () => {
                     )}
                 </div>
             )}
+
             {suggestions.length > 0 ? (
                 <div className="suggestions-container">
                     <h3>Suggestions</h3>

@@ -46,8 +46,15 @@ const Expense = ({ onSubmit }) => {
     };
 
     const handleEditChange = (e) => {
-        setEditAmount(e.target.value);
-    };
+        const value = e.target.value;
+    
+        // Ensure the value is an integer, positive, or empty
+        if (value === '' || (/^[0-9]+$/.test(value) && parseInt(value, 10) > 0)) {
+            setEditAmount(value);
+        } else {
+            alert('Please enter a positive integer amount.');
+        }
+    }; 
 
     const handleEditSave = async (id) => {
         try {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSuggestions, getCachedSuggestions, getBalanceGraph } from '../api';
+import GraphComponent from './GraphComponent';
 import ReactMarkdown from 'react-markdown';
 import '../static/css/StepStyles.css';
 
@@ -19,7 +20,7 @@ const Suggestions = () => {
     }, []);
 
     const fetchCachedSuggestions = async () => {
-        const balanceId = 1; // Hardcoded balance ID for new users
+        const balanceId = 1; // Hardcoded balance ID for now
         try {
             const response = await getCachedSuggestions(balanceId);
             if (response.data.suggestions) {
@@ -39,7 +40,7 @@ const Suggestions = () => {
         try {
             const response = await getBalanceGraph(balanceId);
             setGraphData(response.data.balance_graph);
-            setProjectedRevenue(response.data.projected_revenue);
+            setProjectedRevenue(response.data.projected_revenue.filter(data => data.projected_balance > 0)); // Remove negatives
         } catch (error) {
             console.error('Error fetching graph data:', error.message);
             setError('Failed to fetch balance graph and projected revenue.');
@@ -76,35 +77,10 @@ const Suggestions = () => {
                 {loading ? 'Loading...' : disabled ? 'Suggestions Loaded' : 'Get Suggestions'}
             </button>
             {error && <p className="error-message">{error}</p>}
-    
-            {graphData.length > 0 && (
-                <div className="graph-container">
-                    <h3>Balance Projection Graph</h3>
-                    <ul>
-                        {graphData.map((data, index) => (
-                            <li key={index}>
-                                <strong>Year {data.year}:</strong> ${data.balance.toFixed(2)}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-    
-            {projectedRevenue.length > 0 && projectedRevenue.some(data => data.projected_balance > 0) && (
-                <div className="graph-container">
-                    <h3>Projected Revenue</h3>
-                    <ul>
-                        {projectedRevenue
-                            .filter(data => data.projected_balance > 0)
-                            .map((data, index) => (
-                                <li key={index}>
-                                    <strong>Year {data.year}:</strong> ${data.projected_balance.toFixed(2)}
-                                </li>
-                            ))}
-                    </ul>
-                </div>
-            )}
-    
+
+            {graphData.length > 0 && <GraphComponent graphData={graphData} title="Balance Projection Graph" color="#14FFEC" />}
+            {projectedRevenue.length > 0 && <GraphComponent graphData={projectedRevenue} title="Projected Revenue" color="#FFA500" />}
+
             {analysis && (
                 <div className="analysis-container">
                     <h3>Analysis</h3>
@@ -120,7 +96,7 @@ const Suggestions = () => {
                     )}
                 </div>
             )}
-    
+
             {swot && (
                 <div className="swot-container">
                     {swot.strengths?.length > 0 && (

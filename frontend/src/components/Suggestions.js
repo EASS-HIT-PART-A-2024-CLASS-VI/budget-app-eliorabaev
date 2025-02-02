@@ -36,16 +36,17 @@ const Suggestions = () => {
     };
 
     const fetchGraphData = async () => {
-        const balanceId = 1; // Hardcoded balance ID for now
+        const balanceId = 1; // Hardcoded balance ID for new users.
         try {
             const response = await getBalanceGraph(balanceId);
             setGraphData(response.data.balance_graph);
-            setProjectedRevenue(response.data.projected_revenue.filter(data => data.projected_balance > 0)); // Remove negatives
+            setProjectedRevenue(response.data.projected_revenue.filter(data => data.projected_balance > 0));
         } catch (error) {
             console.error('Error fetching graph data:', error.message);
             setError('Failed to fetch balance graph and projected revenue.');
         }
     };
+
 
     const fetchSuggestions = async () => {
         const balanceId = 1;
@@ -78,8 +79,9 @@ const Suggestions = () => {
             </button>
             {error && <p className="error-message">{error}</p>}
 
-            {graphData.length > 0 && <GraphComponent graphData={graphData} title="Balance Projection Graph" color="#14FFEC" />}
-            {projectedRevenue.length > 0 && <GraphComponent graphData={projectedRevenue} title="Projected Revenue" color="#FFA500" />}
+            {graphData.length > 0 && projectedRevenue.length > 0 && (
+                <GraphComponent balanceData={graphData} revenueData={projectedRevenue} />
+            )}
 
             {analysis && (
                 <div className="analysis-container">

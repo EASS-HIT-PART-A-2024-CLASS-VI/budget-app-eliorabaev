@@ -5,20 +5,29 @@ import '../static/css/StepStyles.css';
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
-const GraphComponent = ({ graphData, title, color }) => {
-    if (!graphData.length) return null;
+const GraphComponent = ({ balanceData, revenueData }) => {
+    if (!balanceData.length || !revenueData.length) return null;
 
     const data = {
-        labels: graphData.map(data => data.year),
+        labels: balanceData.map(data => data.year),
         datasets: [
             {
-                label: title,
-                data: graphData.map(data => data.balance ?? data.projected_balance),
-                borderColor: color,
-                backgroundColor: `${color}33`,
+                label: 'Balance Projection',
+                data: balanceData.map(data => data.balance),
+                borderColor: '#14FFEC',
+                backgroundColor: 'rgba(20, 255, 236, 0.2)',
                 pointRadius: 5,
-                pointBackgroundColor: color,
-                fill: true,
+                pointBackgroundColor: '#14FFEC',
+                fill: false,
+            },
+            {
+                label: 'Projected Revenue',
+                data: revenueData.map(data => data.projected_balance),
+                borderColor: '#FFA500',
+                backgroundColor: 'rgba(255, 165, 0, 0.2)',
+                pointRadius: 5,
+                pointBackgroundColor: '#FFA500',
+                fill: false,
             }
         ]
     };
@@ -38,14 +47,26 @@ const GraphComponent = ({ graphData, title, color }) => {
             }
         },
         plugins: {
-            legend: { labels: { color: '#ffffff' } },
-            tooltip: { backgroundColor: color }
+            legend: { 
+                labels: { color: '#ffffff' } 
+            },
+            tooltip: {
+                backgroundColor: 'rgba(30, 30, 30, 0.9)', /* Dark background */
+                titleColor: '#ffffff', /* White title */
+                bodyColor: '#ffffff', /* White text */
+                borderColor: '#14FFEC', /* Light blue border */
+                borderWidth: 1,
+                cornerRadius: 6,
+                padding: 10,
+                displayColors: false /* Hides the color box in tooltips */
+            }
         }
     };
+    
 
     return (
         <div className="graph-container">
-            <h3>{title}</h3>
+            <h3>Balance & Revenue Projection</h3>
             <div className="graph-wrapper">
                 <Line data={data} options={options} />
             </div>

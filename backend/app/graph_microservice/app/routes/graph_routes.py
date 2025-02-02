@@ -16,9 +16,9 @@ async def get_balance_graph(
 ):
     """Fetch data for the given balance ID and compute the balance graph incrementally per month."""
     try:
-        # Default year to 5 years from now if not provided
+        # Default year to 15 years from now if not provided
         current_year = datetime.now().year
-        target_year = year or current_year + 5
+        target_year = year or current_year + 15
 
         async with httpx.AsyncClient() as client:
             # Fetch the user's balance
@@ -61,9 +61,9 @@ async def get_projected_revenue(
 ):
     """Fetch data for the given balance ID and compute the projected revenue with correct yearly compounding."""
     try:
-        # Default year to 5 years from now if not provided
+        # Default year to 15 years from now if not provided
         current_year = datetime.now().year
-        target_year = year or current_year + 5
+        target_year = year or current_year + 15
 
         async with httpx.AsyncClient() as client:
             # Fetch the user's balance

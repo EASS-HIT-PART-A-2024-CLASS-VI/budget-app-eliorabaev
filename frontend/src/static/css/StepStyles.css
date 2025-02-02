@@ -380,8 +380,8 @@
 /* 📊 Graph Styling */
 .graph-container {
     width: 100%;
-    max-width: 800px;
-    margin: 30px auto;
+    max-width: 580px;
+    margin: 30px 0;
     padding: 20px;
     background: var(--background-color);
     border-radius: 12px;

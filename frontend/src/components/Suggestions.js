@@ -20,7 +20,7 @@ const Suggestions = () => {
     }, []);
 
     const fetchCachedSuggestions = async () => {
-        const balanceId = 1; // Hardcoded balance ID for now
+        const balanceId = 1; // Hardcoded balance ID for free useres.
         try {
             const response = await getCachedSuggestions(balanceId);
             if (response.data.suggestions) {
@@ -36,17 +36,45 @@ const Suggestions = () => {
     };
 
     const fetchGraphData = async () => {
-        const balanceId = 1; // Hardcoded balance ID for new users.
+        const balanceId = 1;
         try {
-            const response = await getBalanceGraph(balanceId);
-            setGraphData(response.data.balance_graph);
-            setProjectedRevenue(response.data.projected_revenue.filter(data => data.projected_balance > 0));
+            // ✅ Fetch data separately
+            const balanceResponse = await fetch(`http://localhost:8000/balance/${balanceId}`);
+            const incomeResponse = await fetch(`http://localhost:8000/incomes?balance_id=${balanceId}`);
+            const expenseResponse = await fetch(`http://localhost:8000/expenses?balance_id=${balanceId}`);
+            const graphResponse = await getBalanceGraph(balanceId); // Fetch graph data
+    
+            // ✅ Convert responses to JSON
+            const balanceData = await balanceResponse.json();
+            const incomes = await incomeResponse.json();
+            const expenses = await expenseResponse.json();
+            const graphData = graphResponse.data.balance_graph || [];
+            const projectedRevenue = graphResponse.data.projected_revenue || [];
+    
+            // ✅ Calculate total income and expenses from JSON data
+            const totalIncome = incomes.reduce((sum, item) => sum + (item.amount || 0), 0);
+            const totalExpense = expenses.reduce((sum, item) => sum + (item.amount || 0), 0);
+            const cashFlow = totalIncome - totalExpense;
+    
+            console.log("Total Income:", totalIncome);
+            console.log("Total Expense:", totalExpense);
+            console.log("Cash Flow:", cashFlow);
+    
+            // ✅ Always show Balance Projection
+            setGraphData(graphData);
+    
+            // ✅ Only show Projected Revenue if Cash Flow is positive
+            if (cashFlow > 0) {
+                setProjectedRevenue(projectedRevenue.filter(data => data.projected_balance > 0));
+            } else {
+                setProjectedRevenue([]);  // Hide Projected Revenue
+            }
+    
         } catch (error) {
-            console.error('Error fetching graph data:', error.message);
-            setError('Failed to fetch balance graph and projected revenue.');
+            console.error('Error fetching balance, incomes, expenses, or graph data:', error.message);
+            setError('Failed to fetch balance graph, incomes, and expenses.');
         }
-    };
-
+    };    
 
     const fetchSuggestions = async () => {
         const balanceId = 1;
@@ -79,8 +107,11 @@ const Suggestions = () => {
             </button>
             {error && <p className="error-message">{error}</p>}
 
-            {graphData.length > 0 && projectedRevenue.length > 0 && (
-                <GraphComponent balanceData={graphData} revenueData={projectedRevenue} />
+            {graphData.length > 0 && (
+                <GraphComponent 
+                    balanceData={graphData} 
+                    revenueData={projectedRevenue.length > 0 ? projectedRevenue : []}
+                />
             )}
 
             {analysis && (

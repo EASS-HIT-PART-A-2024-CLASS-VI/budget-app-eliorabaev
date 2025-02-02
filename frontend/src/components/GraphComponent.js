@@ -6,30 +6,35 @@ import '../static/css/StepStyles.css';
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
 const GraphComponent = ({ balanceData, revenueData }) => {
-    if (!balanceData.length || !revenueData.length) return null;
+    if (!balanceData.length) return null;
+
+    const datasets = [
+        {
+            label: 'Balance Projection',
+            data: balanceData.map(data => data.balance),
+            borderColor: '#14FFEC',
+            backgroundColor: 'rgba(20, 255, 236, 0.2)',
+            pointRadius: 5,
+            pointBackgroundColor: '#14FFEC',
+            fill: false,
+        }
+    ];
+
+    if (revenueData.length > 0) {
+        datasets.push({
+            label: 'Projected Revenue',
+            data: revenueData.map(data => data.projected_balance),
+            borderColor: '#FFA500',
+            backgroundColor: 'rgba(255, 165, 0, 0.2)',
+            pointRadius: 5,
+            pointBackgroundColor: '#FFA500',
+            fill: false,
+        });
+    }
 
     const data = {
         labels: balanceData.map(data => data.year),
-        datasets: [
-            {
-                label: 'Balance Projection',
-                data: balanceData.map(data => data.balance),
-                borderColor: '#14FFEC',
-                backgroundColor: 'rgba(20, 255, 236, 0.2)',
-                pointRadius: 5,
-                pointBackgroundColor: '#14FFEC',
-                fill: false,
-            },
-            {
-                label: 'Projected Revenue',
-                data: revenueData.map(data => data.projected_balance),
-                borderColor: '#FFA500',
-                backgroundColor: 'rgba(255, 165, 0, 0.2)',
-                pointRadius: 5,
-                pointBackgroundColor: '#FFA500',
-                fill: false,
-            }
-        ]
+        datasets: datasets
     };
 
     const options = {
@@ -47,9 +52,7 @@ const GraphComponent = ({ balanceData, revenueData }) => {
             }
         },
         plugins: {
-            legend: { 
-                labels: { color: '#ffffff' } 
-            },
+            legend: { labels: { color: '#ffffff' } },
             tooltip: {
                 backgroundColor: 'rgba(30, 30, 30, 0.9)', /* Dark background */
                 titleColor: '#ffffff', /* White title */
@@ -62,7 +65,6 @@ const GraphComponent = ({ balanceData, revenueData }) => {
             }
         }
     };
-    
 
     return (
         <div className="graph-container">

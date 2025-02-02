@@ -18,7 +18,7 @@ services:
       context: ./frontend
     container_name: budget-app-frontend
     ports:
-      - "3000:3000" # Map port 3000 on the host to port 3000 in the container
+      - "3000:3000"
     depends_on:
       - backend # Ensure the backend service is started before the frontend
 
@@ -28,3 +28,12 @@ services:
     container_name: llm-microservice
     ports:
       - "8001:8001"
+
+  graph_microservice:
+    build:
+      context: ./backend/app/graph_microservice
+    container_name: graph-microservice
+    ports:
+      - "8002:8002"
+    depends_on:
+      - backend # Ensure the backend service is started before the graph microservice

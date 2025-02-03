@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path, Query
 import httpx
 from datetime import datetime
-from app.models.graph_models import BalanceGraphData, ProjectedRevenueData
+from app.graph_microservice.app.models.graph_models import BalanceGraphData, ProjectedRevenueData
 
 router = APIRouter()
 

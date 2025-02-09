@@ -31,7 +31,7 @@ const AboutMe = () => {
             <section className="about-me-section">
                 <h2>Professional Experience</h2>
                 <div className="experience">
-                    <h3>Electra Consumer Products Ltd (<a href="https://www.payngo.co.il" target="_blank" rel="noopener noreferrer" class="links">
+                    <h3>Electra Consumer Products Ltd (<a href="https://www.payngo.co.il" target="_blank" rel="noopener noreferrer" className="links">
                         payngo.co.il
                     </a>)</h3>
                     <p><strong>Front-End Developer</strong> (November 2024 – Present)</p>

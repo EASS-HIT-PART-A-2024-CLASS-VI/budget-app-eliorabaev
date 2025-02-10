@@ -200,9 +200,9 @@ curl -X GET "http://localhost:8000/balance/1/graph"
 ```
 
 ### 📌 Financial Suggestions
-- **GET /suggestions/{balance_id}** - Get AI-powered financial recommendations:
+- **POST /suggestions/{balance_id}** - Get AI-powered financial recommendations:
 ```sh
-curl -X GET "http://localhost:8000/suggestions/1"
+curl -X POST "http://localhost:8000/suggestions/1"
 ```
 
 ### 🛠️ Technologies Used

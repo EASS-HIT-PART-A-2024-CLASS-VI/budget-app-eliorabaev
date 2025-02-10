@@ -141,7 +141,7 @@ DEBUG=True
 ### 1️⃣ Clone the Repository
 ```sh
 git clone https://github.com/EASS-HIT-PART-A-2024-CLASS-VI/budget-app-eliorabaev.git 
-cd budget-app/backend
+cd budget-app-eliorabaev/backend
 ```
 
 ### 2️⃣ Run with Docker
@@ -150,15 +150,7 @@ docker build -t budget-app-backend .
 docker run -d --name budget-app-backend -p 8000:8000 budget-app-backend
 ```
 
-### 3️⃣ Run Locally
-```sh
-python -m venv venv
-source venv/bin/activate  # Windows: `venv\Scripts\activate`
-pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### 4️⃣ Access API
+### 3️⃣ Access API
 Open [http://localhost:8000](http://localhost:8000) to test the API.
 
 ### 🔥 API Endpoints
@@ -172,6 +164,11 @@ curl -X POST "http://localhost:8000/balance/" -H "Content-Type: application/json
 ```sh
 curl -X GET "http://localhost:8000/balance/1"
 ```
+- **PATCH /balance/{balance_id}** - Update balance:
+```sh
+curl -X PATCH "http://localhost:8000/balance/1" -H "Content-Type: application/json" -d '{"amount": 1500}'
+```
+
 
 ### 📌 Incomes
 - **POST /incomes/** - Add income:
@@ -181,6 +178,14 @@ curl -X POST "http://localhost:8000/incomes/" -H "Content-Type: application/json
 - **GET /incomes/{income_id}** - Retrieve income:
 ```sh
 curl -X GET "http://localhost:8000/incomes/1"
+```
+- **GET /incomes/** - Retrieve all incomes:
+```sh
+curl -X GET "http://localhost:8000/incomes/"
+```
+- **PATCH /incomes/{income_id}** - Update income:
+```sh
+curl -X PATCH "http://localhost:8000/incomes/1" -H "Content-Type: application/json" -d '{"amount": 600}'
 ```
 
 ### 📌 Expenses
@@ -192,18 +197,44 @@ curl -X POST "http://localhost:8000/expenses/" -H "Content-Type: application/jso
 ```sh
 curl -X GET "http://localhost:8000/expenses/1"
 ```
-
-### 📌 Financial Graphs
-- **GET /balance/{balance_id}/graph** - Get balance projections and revenue estimates:
+- **GET /expenses/** - Retrieve all expenses:
 ```sh
-curl -X GET "http://localhost:8000/balance/1/graph"
+curl -X GET "http://localhost:8000/expenses/"
 ```
+- **PATCH /expenses/{expense_id}** - Update expense:
+```sh
+curl -X PATCH "http://localhost:8000/expenses/1" -H "Content-Type: application/json" -d '{"amount": 120}'
+```
+
 
 ### 📌 Financial Suggestions
 - **POST /suggestions/{balance_id}** - Get AI-powered financial recommendations:
 ```sh
 curl -X POST "http://localhost:8000/suggestions/1"
 ```
+- **GET /suggestions/{balance_id}** - Retrieve cached financial suggestions:
+```sh
+curl -X GET "http://localhost:8000/suggestions/1"
+```
+- **GET /balance/{balance_id}/graph** - Get balance projections and revenue estimates:
+```sh
+curl -X GET "http://localhost:8000/balance/1/graph"
+```
+
+### 📌 Delete Data
+- **DELETE /incomes/{income_id}** - Delete income:
+```sh
+curl -X DELETE "http://localhost:8000/incomes/1"
+```
+- **DELETE /expenses/{expense_id}** - Delete expense ():
+```sh
+curl -X DELETE "http://localhost:8000/expenses/1"
+```
+- **DELETE /balance/{balance_id}** - Delete balance:
+```sh
+curl -X DELETE "http://localhost:8000/balance/1"
+```
+
 
 ### 🛠️ Technologies Used
 - 🚀 FastAPI
@@ -213,6 +244,12 @@ curl -X POST "http://localhost:8000/suggestions/1"
 - ⚡ Uvicorn
 - 🧪 Pytest
 
+### 🧪 Running Tests
+
+- **Backend Tests:**
+```bash
+pytest backend/
+```
 ---
 ## 🤖 LLM microservice
 
@@ -370,68 +407,104 @@ This is a FastAPI-based service that provides financial balance projections and 
 
 ## 🌐 Frontend
 
-The frontend is built using **React**, designed to deliver an intuitive and responsive user experience. Key features include:
-- **Dynamic Financial Insights:** Displays analysis and suggestions with interactive elements.
-- **State Persistence:** Leverages `sessionStorage` to prevent redundant API calls.
-- **Theming:** Styled with CSS variables for a modern appearance.
+The frontend of the Budget App is built using **React** to provide a seamless and responsive user experience. It integrates with backend services to offer real-time financial insights, utilizing modern web development practices.
 
-### 📂 Frontend Directory Structure
+### ✨ Key Features
+
+- **Dynamic Financial Insights:** Presents financial analysis, recommendations, and graphical data representations.
+- **State Persistence:** Utilizes `sessionStorage` to optimize API requests and enhance performance.
+- **Modular Architecture:** Built with reusable React components to maintain scalability and maintainability.
+- **Theming & Styling:** Implements CSS variables and modular CSS for a consistent UI/UX.
+- **Robust Error Handling:** Uses an `ErrorBoundary` component to prevent application crashes.
+
+### 📂 Project Structure
 
 ```bash
 frontend/
 ├── Dockerfile                  # Docker configuration for containerizing the frontend app
-├── package-lock.json           # Auto-generated file that locks dependencies
+├── package-lock.json           # Locks dependencies to ensure consistent builds
 ├── package.json                # Project metadata, scripts, and dependencies
 ├── public
+│   ├── favicon.ico             # App icon
 │   └── index.html              # Main HTML entry point
-└── src                         # Application's source code
+├── __mocks__                   # Mock directory for testing
+│   └── react-router-dom.js      # Mock implementation of react-router-dom
+└── src                         # Source code directory
+    ├── api.js                  # API utility functions for backend communication
     ├── App.js                  # Main React component handling routes
-    ├── api.js                  # API utility functions
-    ├── components              # Reusable React components
-    │   ├── Balance.js
-    │   ├── BudgetSteps.js
-    │   ├── Suggestions.js      # Displays financial suggestions
-    ├── fonts                   # Custom fonts
-    ├── static                  # Static assets (CSS, images)
-        ├── css                 # Component styles
-        └── images              # Logo and other assets
+    ├── components              # Modular and reusable React components
+    │   ├── AboutMe.js          # About Me page component
+    │   ├── Balance.js          # Balance management component
+    │   ├── BudgetSteps.js      # Step-based budgeting process component
+    │   ├── Expense.js          # Expense tracking component
+    │   ├── GraphComponent.js   # Graph visualization component
+    │   ├── Header.js           # Navigation bar component
+    │   ├── Homepage.js         # Main landing page
+    │   ├── Income.js           # Income tracking component
+    │   ├── Suggestions.js      # Financial suggestions display component
+    ├── ErrorBoundary.js        # Global error handling component
+    ├── fonts                   # Custom fonts used in the app
+    ├── static                  # Static assets (CSS, images, etc.)
+    │   ├── css                 # Component stylesheets
+    │   └── images              # Logos and other assets
 ```
 
-### 🛠️ Frontend Setup
+### 🛠️ Setup & Installation
 
 #### Prerequisites
 - Docker installed on your machine.
+- Node.js (if running without Docker)
 
-#### Installation
+#### Running with Docker
 
 1. Navigate to the frontend directory:
-    ```bash
-    cd frontend
-    ```
+```bash
+cd frontend
+```
 2. Build and run the Docker container:
-    ```bash
-    docker build -t budget-app-frontend .
-    docker run -d --name budget-app-frontend -p 3000:3000 budget-app-frontend
-    ```
-3. Access the application:
-    Open [http://localhost:3000](http://localhost:3000).
-
-Alternatively, run both frontend and backend with:
 ```bash
-docker-compose up
+docker build -t budget-app-frontend .
+docker run -d --name budget-app-frontend -p 3000:3000 budget-app-frontend
 ```
+3. Access the application in your browser:
+```
+http://localhost:3000
+```
+
+#### Running Locally (Without Docker)
+
+1. Install dependencies:
+```bash
+npm install
+```
+2. Start the development server:
+```bash
+npm start
+```
+3. The application will be available at:
+```
+http://localhost:3000
+```
+
+### 🧪 Running Tests
+
+To run tests, use the following command:
+```bash
+npm test
+```
+This will execute all test cases using Jest and React Testing Library.
+
+### ✅ Best Practices & Notes
+
+- Follow modular component design for scalability.
+- Ensure API responses are handled gracefully with proper error boundaries.
+- Use `sessionStorage` wisely to minimize redundant API requests.
+- Maintain consistent styling with CSS modules and variables.
+
+This frontend is designed to be efficient, scalable, and user-friendly, making financial planning effortless for users.
 
 ---
 
-## 🧪 Running Tests
-
-- **Backend Tests:**
-```bash
-pytest backend/app/tests/unit_test.py
-```
-- **Frontend Tests:** Coming soon!
-
----
 
 ## 🎉 Conclusion
 

@@ -30,28 +30,27 @@ const Suggestions = () => {
                 setDisabled(true);
             }
         } catch (error) {
-            console.error('Error fetching cached suggestions:', error.message);
-            setError('No cached suggestions found. Please generate new suggestions.');
+            setError('');
         }
     };
 
     const fetchGraphData = async () => {
         const balanceId = 1;
         try {
-            // ✅ Fetch data separately
+            // Fetch data separately
             const balanceResponse = await fetch(`http://localhost:8000/balance/${balanceId}`);
             const incomeResponse = await fetch(`http://localhost:8000/incomes?balance_id=${balanceId}`);
             const expenseResponse = await fetch(`http://localhost:8000/expenses?balance_id=${balanceId}`);
             const graphResponse = await getBalanceGraph(balanceId); // Fetch graph data
     
-            // ✅ Convert responses to JSON
+            // Convert responses to JSON
             const balanceData = await balanceResponse.json();
             const incomes = await incomeResponse.json();
             const expenses = await expenseResponse.json();
             const graphData = graphResponse.data.balance_graph || [];
             const projectedRevenue = graphResponse.data.projected_revenue || [];
     
-            // ✅ Calculate total income and expenses from JSON data
+            // Calculate total income and expenses from JSON data
             const totalIncome = incomes.reduce((sum, item) => sum + (item.amount || 0), 0);
             const totalExpense = expenses.reduce((sum, item) => sum + (item.amount || 0), 0);
             const cashFlow = totalIncome - totalExpense;
@@ -60,10 +59,10 @@ const Suggestions = () => {
             console.log("Total Expense:", totalExpense);
             console.log("Cash Flow:", cashFlow);
     
-            // ✅ Always show Balance Projection
+            // Always show Balance Projection
             setGraphData(graphData);
     
-            // ✅ Only show Projected Revenue if Cash Flow is positive
+            // Only show Projected Revenue if Cash Flow is positive
             if (cashFlow > 0) {
                 setProjectedRevenue(projectedRevenue.filter(data => data.projected_balance > 0));
             } else {
@@ -98,6 +97,34 @@ const Suggestions = () => {
     return (
         <div className="step-container">
             <h2 className="step-title">Financial Suggestions</h2>
+            
+            {graphData.length > 0 && (
+                <>
+                    <GraphComponent 
+                        balanceData={graphData} 
+                        revenueData={projectedRevenue.length > 0 ? projectedRevenue : []}
+                    />
+                    <div className="line-explanations">
+                        <p>
+                            <strong className="blue-line">Blue Line (Balance Projection): </strong> 
+                            This line represents your current balance projection over time, 
+                            taking into account your annual contributions from the start of the year.
+                        </p>
+                        {projectedRevenue.length > 0 &&
+                            projectedRevenue.some(item => item.projected_balance > 0) && (
+                                <p>
+                                    <strong className="orange-line">Orange Line (Projected Revenue): </strong> 
+                                    This line shows your projected revenue based on the difference between 
+                                    your monthly income and expenses. It calculates the annual contribution 
+                                    (monthly income minus expenses multiplied by 12) and then applies an 8% 
+                                    yearly compounded growth.
+                                </p>
+                            )}
+                    </div>
+                </>
+            )}
+            <p className="want-to-know">Want to get suggestions based on your data? <br />
+             Click the button now!</p>
             <button
                 onClick={fetchSuggestions}
                 className="step-button"
@@ -105,15 +132,8 @@ const Suggestions = () => {
             >
                 {loading ? 'Loading...' : disabled ? 'Suggestions Loaded' : 'Get Suggestions'}
             </button>
+            
             {error && <p className="error-message">{error}</p>}
-
-            {graphData.length > 0 && (
-                <GraphComponent 
-                    balanceData={graphData} 
-                    revenueData={projectedRevenue.length > 0 ? projectedRevenue : []}
-                />
-            )}
-
             {analysis && (
                 <div className="analysis-container">
                     <h3>Analysis</h3>
@@ -174,7 +194,12 @@ const Suggestions = () => {
                                     <ul>{suggestion.steps.map((step, stepIndex) => <li key={stepIndex}>{step}</li>)}</ul>
                                 )}
                                 {suggestion.reference_url && (
-                                    <p><strong>Learn More:</strong> <a href={suggestion.reference_url} target="_blank" rel="noopener noreferrer">{suggestion.reference_url}</a></p>
+                                    <p>
+                                        <strong>Learn More:</strong> 
+                                        <a href={suggestion.reference_url} target="_blank" rel="noopener noreferrer">
+                                            {suggestion.reference_url}
+                                        </a>
+                                    </p>
                                 )}
                             </li>
                         ))}

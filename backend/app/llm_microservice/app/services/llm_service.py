@@ -1,4 +1,6 @@
 import os
+import asyncio
+import random
 from pathlib import Path
 import google.generativeai as genai
 from datetime import datetime, timezone
@@ -57,15 +59,35 @@ async def get_suggestions(data: dict) -> dict:
             logger.error(f"Template substitution error: Missing key {e}")
             raise ValueError(f"Missing key in data for substitution: {e}")
 
-        # Generate content using the Gemini model
+        # Generate content using the Gemini model with retry logic
         model = genai.GenerativeModel(model_name="gemini-1.5-flash")
-        response = model.generate_content(
-            formatted_prompt,
-            generation_config=genai.GenerationConfig(
-                max_output_tokens=3500,
-                temperature=0.7,
-            ),
-        )
+        max_retries = 5  # Increased retries
+        response = None
+
+        for attempt in range(max_retries):
+            try:
+                response = model.generate_content(
+                    formatted_prompt,
+                    generation_config=genai.GenerationConfig(
+                        max_output_tokens=3500,
+                        temperature=0.7,
+                    ),
+                )
+                break  # Exit loop if successful
+            except Exception as e:
+                if "429" in str(e):
+                    # Exponential backoff with jitter: e.g. 2^attempt + random delay between 0 and 1 sec
+                    wait_time = (2 ** attempt) + random.uniform(0, 1)
+                    logger.warning(
+                        f"Received 429 error, retrying after {wait_time:.2f} seconds (attempt {attempt + 1}/{max_retries})"
+                    )
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(wait_time)
+                    else:
+                        logger.error("Max retries reached for 429 error.")
+                        raise Exception(f"LLM API error: {str(e)}")
+                else:
+                    raise
 
         # Validate the response
         if not response or not hasattr(response, "text"):
@@ -81,7 +103,6 @@ async def get_suggestions(data: dict) -> dict:
         if raw_output.endswith("```"):
             raw_output = raw_output[:-3]
         raw_output = raw_output.replace("\\n", "\n")
-
         logger.debug("Cleaned LLM response: %s", raw_output)
 
         # Parse and enrich the response

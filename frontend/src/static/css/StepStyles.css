@@ -303,6 +303,7 @@
     align-items: center;
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
 .swot-section {
@@ -409,7 +410,6 @@
         color: #FFA500;
     }
 }
-
 
 .want-to-know {
     margin: 24px 0;

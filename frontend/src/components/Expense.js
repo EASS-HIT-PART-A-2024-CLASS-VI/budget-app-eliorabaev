@@ -79,7 +79,7 @@ const Expense = ({ onSubmit }) => {
 
     return (
         <div className="step-container">
-            <h2 className="step-title">Track Your Expenses</h2>
+            <h2 className="step-title">Enter Your Expenses Per Month</h2>
             <form className="step-form" onSubmit={handleAddExpense}>
                 <label>
                     Category:
@@ -111,7 +111,7 @@ const Expense = ({ onSubmit }) => {
                 </div>
             </form>
             <div className="list-container">
-                <h3>Your Expenses</h3>
+                <h3>Your Expenses Per Month:</h3>
                 {expenses.length > 0 ? (
                     <ul>
                         {expenses.map((exp) => (

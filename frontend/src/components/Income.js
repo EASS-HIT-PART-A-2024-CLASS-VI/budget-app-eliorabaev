@@ -79,7 +79,7 @@ const Income = ({ onSubmit }) => {
 
     return (
         <div className="step-container">
-            <h2 className="step-title">Add Your Income Sources</h2>
+            <h2 className="step-title">Enter Your Income Sources Per Month</h2>
             <form className="step-form" onSubmit={handleAddIncome}>
                 <label>
                     Source:
@@ -111,7 +111,7 @@ const Income = ({ onSubmit }) => {
                 </div>
             </form>
             <div className="list-container">
-                <h3>Your Income Sources</h3>
+                <h3>Your Income Sources Per Month:</h3>
                 {incomes.length > 0 ? (
                     <ul>
                         {incomes.map((inc) => (

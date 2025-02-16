@@ -59,7 +59,7 @@ const Balance = ({ onSubmit, setStep }) => {
             <div className="dynamic-content">
                 {!isBalanceSet ? (
                     <>
-                        <h2 className="step-title">Enter your balance</h2>
+                        <h2 className="step-title">Enter Your Total Balance</h2>
                         <p className="balance-message">If you have more than one balance, add them up.</p>
                         <p className="balance-warning">(Once a balance is set it cannot be changed!)</p>
                     </>

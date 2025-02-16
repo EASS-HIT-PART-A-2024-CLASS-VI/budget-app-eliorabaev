@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Path, Request
 from services.suggestion_service import fetch_financial_data, generate_suggestions, session_suggestions
 from llm_microservice.app.models.schemas import LLMResponse
 import logging
+from services.balance_service import retrieve_balance
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,10 @@ async def get_suggestions(
     request: Request,
     balance_id: int = Path(..., description="The ID of the balance"),
 ):
+    balance = await retrieve_balance(request, balance_id)
+    if not balance:
+        raise HTTPException(status_code=404, detail="Balance not found")
+    
     try:
         # Fetch financial data for the given balance ID
         financial_data = fetch_financial_data(request, balance_id)

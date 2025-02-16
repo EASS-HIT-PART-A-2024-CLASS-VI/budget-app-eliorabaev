@@ -33,6 +33,9 @@ budget-app/
 ├── docker-compose.yml  # Orchestrates backend and frontend services
 └── README.md    # Project documentation
 ```
+<div align="center">
+  <img src="frontend/src/static/images/Arrow_diagram.png" alt="Budget App Logo" width="80%">
+</div>
 
 ---
 ## Setting up the Project

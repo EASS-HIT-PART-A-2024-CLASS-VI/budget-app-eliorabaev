@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getIncomes, addIncome, updateIncome } from '../api'; // Import updateIncome function
+import { getIncomes, addIncome, updateIncome, deleteIncome } from '../api'; // Import updateIncome function
 import '../static/css/StepStyles.css';
 
 const Income = ({ onSubmit }) => {
@@ -55,6 +55,16 @@ const Income = ({ onSubmit }) => {
             alert('Please enter a positive integer amount.');
         }
     };
+
+    const handleDeleteClick = async (id) => {
+        try {
+            await deleteIncome(id); // Delete the income
+            setIncomes(incomes.filter((inc) => inc.id !== id)); // Update state
+        }
+        catch (error) {
+            console.error('Error deleting expense:', error);
+        };
+    }
 
     const handleEditSave = async (id) => {
         try {
@@ -140,6 +150,12 @@ const Income = ({ onSubmit }) => {
                                             className="edit-button"
                                         >
                                             ✏️
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteClick(inc.id)}
+                                            className="delete-button"
+                                        >
+                                            🗑️
                                         </button>
                                     </>
                                 )}

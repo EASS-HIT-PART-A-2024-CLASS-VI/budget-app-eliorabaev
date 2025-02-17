@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getExpenses, addExpense, updateExpense } from '../api'; // Import updateExpense
+import { getExpenses, addExpense, updateExpense, deleteExpense } from '../api'; // Import updateExpense
 import '../static/css/StepStyles.css';
 
 const Expense = ({ onSubmit }) => {
@@ -44,6 +44,16 @@ const Expense = ({ onSubmit }) => {
         setEditId(id); // Set the ID of the expense being edited
         setEditAmount(amount); // Pre-fill the amount input with the current value
     };
+
+    const handleDeleteClick = async (id) => {
+        try {
+            await deleteExpense(id); // Delete the expense
+            setExpenses(expenses.filter((exp) => exp.id !== id)); // Update state
+        }
+        catch (error) {
+            console.error('Error deleting expense:', error);
+        };
+    }
 
     const handleEditChange = (e) => {
         const value = e.target.value;
@@ -140,6 +150,12 @@ const Expense = ({ onSubmit }) => {
                                             className="edit-button"
                                         >
                                             ✏️
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteClick(exp.id)}
+                                            className="delete-button"
+                                        >
+                                            🗑️
                                         </button>
                                     </>
                                 )}

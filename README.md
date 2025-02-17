@@ -26,7 +26,13 @@ The **Budget App** is a full-stack application designed to help users effectivel
 
 ## 🎥 Demo
 
-[![Budget App Demo](https://img.youtube.com/vi/CQF3g8BdcAU/0.jpg)](https://youtu.be/CQF3g8BdcAU)
+<a href="https://youtu.be/CQF3g8BdcAU" target="_blank">
+  <img 
+    src="frontend/src/static/images/video_thumbnail.png" 
+    alt="Budget App Demo" 
+    width="100%"
+  />
+</a>
 
 ---
 

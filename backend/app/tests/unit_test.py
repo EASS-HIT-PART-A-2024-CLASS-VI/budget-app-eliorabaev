@@ -1,21 +1,24 @@
+from pathlib import Path
+import sys
 import pytest
 from unittest.mock import patch
 from fastapi.testclient import TestClient
-import sys
-import os
 
-# Append the app directory to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from main import app  # Import the FastAPI app
-from state import BudgetState  # Import BudgetState for managing app state
+# Adjust the import path:
+# Current file is at: backend/app/tests/unit_test.py
+# We go two levels up to get: backend/app
+current_file = Path(__file__).resolve()
+app_dir = current_file.parent.parent
+sys.path.insert(0, str(app_dir))
 
-client = TestClient(app)  # Create a TestClient instance for the app
+# Now import the application modules.
+from main import app  # Import directly from the current directory
+from state import BudgetState
+
+client = TestClient(app)
 
 @pytest.fixture(scope="function", autouse=True)
 def setup_and_teardown():
-    """
-    Setup the state before each test and teardown after.
-    """
     app.state.budget_state = BudgetState()
     yield
     del app.state.budget_state

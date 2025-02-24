@@ -1,15 +1,17 @@
+from pathlib import Path
+import sys
 import pytest
 import httpx
 import respx
-import sys
-import os   
 from fastapi.testclient import TestClient
 from datetime import datetime
 
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+# Adjust the import path:
+# Current file is at: backend/app/graph_microservice/app/tests/test_graph_routes.py
+# We go three levels up to get: backend/app/graph_microservice
+current_file = Path(__file__).resolve()
+app_dir = current_file.parent.parent.parent
+sys.path.insert(0, str(app_dir))
 
 # Import the FastAPI app (assumes you have defined it in app/main.py)
 from app.main import app
@@ -23,7 +25,6 @@ balance_data = {"amount": 1000.0}
 incomes_data = [{"amount": 200.0}, {"amount": 300.0}]
 expenses_data = [{"amount": 100.0}]
 backend_url = "http://backend:8000"
-
 
 @respx.mock
 def test_get_balance_graph_default_year():
@@ -67,7 +68,6 @@ def test_get_balance_graph_default_year():
     assert result[-1]["year"] == expected_results[-1]["year"]
     assert result[-1]["balance"] == expected_results[-1]["balance"]
 
-
 @respx.mock
 def test_get_balance_graph_with_query_year():
     """
@@ -101,7 +101,6 @@ def test_get_balance_graph_with_query_year():
     for res, exp in zip(result, expected_results):
         assert res["year"] == exp["year"]
         assert res["balance"] == exp["balance"]
-
 
 @respx.mock
 def test_get_projected_revenue_default_year():
@@ -138,7 +137,6 @@ def test_get_projected_revenue_default_year():
         assert res["year"] == exp["year"]
         # Use pytest.approx for floating point comparisons.
         assert pytest.approx(res["projected_balance"], rel=1e-5) == exp["projected_balance"]
-
 
 @respx.mock
 def test_get_projected_revenue_with_query_year():

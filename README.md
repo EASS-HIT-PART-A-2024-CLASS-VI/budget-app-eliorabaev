@@ -1,7 +1,7 @@
 # 🌟 Budget App
 
 <div align="center">
-  <img src="frontend/src/static/images/logo.png" alt="Budget App Logo" width="50%" style="margin: 10px 0;">
+  <img src="frontend/src/static/images/logo.png" alt="Budget App Logo" width="50%">
 
   A comprehensive financial management solution powered by AI and microservices architecture.
 

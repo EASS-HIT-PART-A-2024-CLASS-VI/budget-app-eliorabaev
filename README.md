@@ -268,9 +268,7 @@ curl -X DELETE "http://localhost:8000/balance/1"
 - 🧪 Pytest
 
 ### 🧪 Running Tests
-
-- **Tests:**
-**run these commands from the root of the project!**
+- **run these commands from the root of the project!**
 - backend:
 ```bash
 pytest backend/app/tests

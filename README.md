@@ -271,14 +271,17 @@ curl -X DELETE "http://localhost:8000/balance/1"
 - **run these commands from the root of the project!**
 - backend:
 ```bash
+pip install -r backend/app/requirements.txt
 pytest backend/app/tests
 ```
 - llm_microservice:
 ```bash
+pip install -r backend/app/llm_microservice/requirements.txt
 pytest backend/app/llm_microservice/app/tests
 ```
 - graph_microservice:
 ```bash
+pip install -r backend/app/graph_microservice/requirements.txt
 pytest backend/app/graph_microservice/app/tests
 ```
 ---

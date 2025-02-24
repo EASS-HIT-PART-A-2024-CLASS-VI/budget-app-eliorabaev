@@ -119,6 +119,8 @@ backend/
 │   │   │   │   ├── llm_service.py
 │   │   │   ├── prompts/
 │   │   │   │   └── financial_advisor_prompt.txt
+│   │   │   └── tests/
+│   │   │       └── test_llm_microservice.py
 │   │   └── requirements.txt
 │   ├── graph_microservice/
 │   │   ├── Dockerfile
@@ -128,8 +130,8 @@ backend/
 │   │   │   │   └── graph_models.py
 │   │   │   ├── routes/
 │   │   │   │   └── graph_routes.py
-│   │   │   ├── tests/
-│   │   │   │   └── test_graph_routes.py
+│   │   │   └── tests/
+│   │   │       └── test_graph_routes.py
 │   │   └── requirements.txt
 │   ├── models/
 │   │   └── balance.py        # Data models for balance, income, and expenses
@@ -267,9 +269,19 @@ curl -X DELETE "http://localhost:8000/balance/1"
 
 ### 🧪 Running Tests
 
-- **Backend Tests:**
+- **Tests:**
+**run these commands from the root of the project!**
+backend:
 ```bash
-pytest backend/
+pytest backend/app/tests
+```
+llm_microservice:
+```bash
+pytest backend/app/llm_microservice/app/tests
+```
+graph_microservice:
+```bash
+pytest backend/app/graph_microservice/app/tests
 ```
 ---
 ## 🤖 LLM microservice
@@ -373,7 +385,7 @@ This is a FastAPI-based service that provides financial balance projections and 
 ✅ Structured JSON output format  
 ✅ Dockerized for easy deployment  
 
-### 📂 Project Structure
+### 📂 Structure
 ```sh
 .
 ├── Dockerfile            # Docker configuration
@@ -438,7 +450,7 @@ The frontend of the Budget App is built using **React** to provide a seamless an
 - **Theming & Styling:** Implements CSS variables and modular CSS for a consistent UI/UX.
 - **Robust Error Handling:** Uses an `ErrorBoundary` component to prevent application crashes.
 
-### 📂 Project Structure
+### 📂 Structure
 
 ```bash
 frontend/

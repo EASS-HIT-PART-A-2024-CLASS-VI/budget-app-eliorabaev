@@ -30,12 +30,11 @@ jobs:
         uses: docker/setup-buildx-action@v2
       
       - name: First stop running containers on EC2
-        uses: appleboy/ssh-action@master
+        uses: aws-actions/aws-ssm-run-command@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
+          instance-ids: ${{ secrets.EC2_INSTANCE_ID }}
+          working-directory: /home/ubuntu/budget-app-eliorabaev
+          command: |
             cd ~/budget-app-eliorabaev
             # Stop all running containers to free up resources
             docker-compose -f docker-compose.ecr.yml down || true
@@ -75,12 +74,11 @@ jobs:
           docker push $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
       
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
+        uses: aws-actions/aws-ssm-run-command@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
+          instance-ids: ${{ secrets.EC2_INSTANCE_ID }}
+          working-directory: /home/ubuntu/budget-app-eliorabaev
+          command: |
             cd ~/budget-app-eliorabaev
             
             # Pull latest code changes for deployment scripts

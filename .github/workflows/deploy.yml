@@ -1,0 +1,90 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: First stop running containers on EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/budget-app-eliorabaev
+            # Stop all running containers to free up resources
+            docker-compose -f docker-compose.ecr.yml down || true
+            echo "All containers stopped"
+      
+      - name: Build, tag, and push images to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          # Create temporary .env file for build
+          mkdir -p backend/app/llm_microservice
+          echo "GEMINI_API_KEY=dummy-value-for-build" > backend/app/llm_microservice/.env
+          
+          # Build images
+          docker-compose build
+          
+          # Tag images with latest and git SHA for versioning
+          docker tag budget-app-eliorabaev_backend:latest $ECR_REGISTRY/budget-app-backend:latest
+          docker tag budget-app-eliorabaev_frontend:latest $ECR_REGISTRY/budget-app-frontend:latest
+          docker tag budget-app-eliorabaev_llm_microservice:latest $ECR_REGISTRY/budget-app-llm:latest
+          docker tag budget-app-eliorabaev_graph_microservice:latest $ECR_REGISTRY/budget-app-graph:latest
+          
+          docker tag budget-app-eliorabaev_backend:latest $ECR_REGISTRY/budget-app-backend:${{ github.sha }}
+          docker tag budget-app-eliorabaev_frontend:latest $ECR_REGISTRY/budget-app-frontend:${{ github.sha }}
+          docker tag budget-app-eliorabaev_llm_microservice:latest $ECR_REGISTRY/budget-app-llm:${{ github.sha }}
+          docker tag budget-app-eliorabaev_graph_microservice:latest $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
+          
+          # Push all images
+          docker push $ECR_REGISTRY/budget-app-backend:latest
+          docker push $ECR_REGISTRY/budget-app-frontend:latest
+          docker push $ECR_REGISTRY/budget-app-llm:latest
+          docker push $ECR_REGISTRY/budget-app-graph:latest
+          
+          docker push $ECR_REGISTRY/budget-app-backend:${{ github.sha }}
+          docker push $ECR_REGISTRY/budget-app-frontend:${{ github.sha }}
+          docker push $ECR_REGISTRY/budget-app-llm:${{ github.sha }}
+          docker push $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
+      
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/budget-app-eliorabaev
+            
+            # Pull latest code changes for deployment scripts
+            git pull
+            
+            # Run the deployment script to pull from ECR and start containers
+            ./deploy-from-ecr.sh
+            
+            # Verify deployment status
+            docker ps

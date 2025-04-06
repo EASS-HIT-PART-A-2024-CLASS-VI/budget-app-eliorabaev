@@ -38,42 +38,42 @@ const Suggestions = () => {
         const balanceId = 1;
         try {
             // Fetch data separately
-            const balanceResponse = await fetch(`http://localhost:8000/balance/${balanceId}`);
-            const incomeResponse = await fetch(`http://localhost:8000/incomes?balance_id=${balanceId}`);
-            const expenseResponse = await fetch(`http://localhost:8000/expenses?balance_id=${balanceId}`);
+            const balanceResponse = await fetch(`/api/balance/${balanceId}`);
+            const incomeResponse = await fetch(`/api/incomes?balance_id=${balanceId}`);
+            const expenseResponse = await fetch(`/api/expenses?balance_id=${balanceId}`);
             const graphResponse = await getBalanceGraph(balanceId); // Fetch graph data
-    
+
             // Convert responses to JSON
             const balanceData = await balanceResponse.json();
             const incomes = await incomeResponse.json();
             const expenses = await expenseResponse.json();
             const graphData = graphResponse.data.balance_graph || [];
             const projectedRevenue = graphResponse.data.projected_revenue || [];
-    
+
             // Calculate total income and expenses from JSON data
             const totalIncome = incomes.reduce((sum, item) => sum + (item.amount || 0), 0);
             const totalExpense = expenses.reduce((sum, item) => sum + (item.amount || 0), 0);
             const cashFlow = totalIncome - totalExpense;
-    
+
             console.log("Total Income:", totalIncome);
             console.log("Total Expense:", totalExpense);
             console.log("Cash Flow:", cashFlow);
-    
+
             // Always show Balance Projection
             setGraphData(graphData);
-    
+
             // Only show Projected Revenue if Cash Flow is positive
             if (cashFlow > 0) {
                 setProjectedRevenue(projectedRevenue.filter(data => data.projected_balance > 0));
             } else {
                 setProjectedRevenue([]);  // Hide Projected Revenue
             }
-    
+
         } catch (error) {
             console.error('Error fetching balance, incomes, expenses, or graph data:', error.message);
             setError('Failed to fetch balance graph, incomes, and expenses.');
         }
-    };    
+    };
 
     const fetchSuggestions = async () => {
         const balanceId = 1;
@@ -97,26 +97,26 @@ const Suggestions = () => {
     return (
         <div className="step-container">
             <h2 className="step-title">Financial Suggestions</h2>
-            
+
             {graphData.length > 0 && (
                 <>
-                    <GraphComponent 
-                        balanceData={graphData} 
+                    <GraphComponent
+                        balanceData={graphData}
                         revenueData={projectedRevenue.length > 0 ? projectedRevenue : []}
                     />
                     <div className="line-explanations">
                         <p>
-                            <strong className="blue-line">Blue Line (Balance Projection): </strong> 
-                            This line represents your current balance projection over time, 
+                            <strong className="blue-line">Blue Line (Balance Projection): </strong>
+                            This line represents your current balance projection over time,
                             taking into account your annual contributions from the start of the year.
                         </p>
                         {projectedRevenue.length > 0 &&
                             projectedRevenue.some(item => item.projected_balance > 0) && (
                                 <p>
-                                    <strong className="orange-line">Orange Line (Projected Revenue): </strong> 
-                                    This line shows your projected revenue based on the difference between 
-                                    your monthly income and expenses. It calculates the annual contribution 
-                                    (monthly income minus expenses multiplied by 12) and then applies an 8% 
+                                    <strong className="orange-line">Orange Line (Projected Revenue): </strong>
+                                    This line shows your projected revenue based on the difference between
+                                    your monthly income and expenses. It calculates the annual contribution
+                                    (monthly income minus expenses multiplied by 12) and then applies an 8%
                                     yearly compounded growth.
                                 </p>
                             )}
@@ -132,7 +132,7 @@ const Suggestions = () => {
             >
                 {loading ? 'Loading...' : disabled ? 'Suggestions Loaded' : 'Get Suggestions'}
             </button>
-            
+
             {error && <p className="error-message">{error}</p>}
             {analysis && (
                 <div className="analysis-container">
@@ -178,7 +178,7 @@ const Suggestions = () => {
                     )}
                 </div>
             )}
-    
+
             {suggestions.length > 0 ? (
                 <div className="suggestions-container">
                     <h3>Suggestions</h3>
@@ -195,7 +195,7 @@ const Suggestions = () => {
                                 )}
                                 {suggestion.reference_url && (
                                     <p>
-                                        <strong>Learn More:</strong> 
+                                        <strong>Learn More:</strong>
                                         <a href={suggestion.reference_url} target="_blank" rel="noopener noreferrer">
                                             {suggestion.reference_url}
                                         </a>

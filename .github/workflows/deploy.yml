@@ -29,13 +29,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       
+      # Fixed parameter formatting for SSM command
       - name: First stop running containers on EC2
         run: |
           # Run SSM command to stop containers
           aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters commands='cd ~/budget-app-eliorabaev && docker-compose -f docker-compose.ecr.yml down || true && echo "All containers stopped"' \
+            --parameters '{"commands":["cd ~/budget-app-eliorabaev && docker-compose -f docker-compose.ecr.yml down || true && echo \"All containers stopped\""]}' \
             --output text
           
           # Give some time for the command to complete
@@ -74,13 +75,14 @@ jobs:
           docker push $ECR_REGISTRY/budget-app-llm:${{ github.sha }}
           docker push $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
       
+      # Fixed parameter formatting for SSM deployment command
       - name: Deploy to EC2
         run: |
           # Run SSM command to deploy
           aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters commands='cd ~/budget-app-eliorabaev && git pull && ./deploy-from-ecr.sh && docker ps' \
+            --parameters '{"commands":["cd ~/budget-app-eliorabaev && git pull && ./deploy-from-ecr.sh && docker ps"]}' \
             --output text
           
           # Give some time for the command to complete

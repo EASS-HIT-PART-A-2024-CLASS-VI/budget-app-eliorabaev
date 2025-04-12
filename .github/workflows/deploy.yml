@@ -61,15 +61,15 @@ jobs:
           docker-compose build
           
           # Tag images with latest and git SHA for versioning
-          docker tag budget-app-eliorabaev_backend:latest $ECR_REGISTRY/budget-app-backend:latest
-          docker tag budget-app-eliorabaev_frontend:latest $ECR_REGISTRY/budget-app-frontend:latest
-          docker tag budget-app-eliorabaev_llm_microservice:latest $ECR_REGISTRY/budget-app-llm:latest
-          docker tag budget-app-eliorabaev_graph_microservice:latest $ECR_REGISTRY/budget-app-graph:latest
+          docker tag budget-app-eliorabaev-backend:latest $ECR_REGISTRY/budget-app-backend:latest
+          docker tag budget-app-eliorabaev-frontend:latest $ECR_REGISTRY/budget-app-frontend:latest
+          docker tag budget-app-eliorabaev-llm_microservice:latest $ECR_REGISTRY/budget-app-llm:latest
+          docker tag budget-app-eliorabaev-graph_microservice:latest $ECR_REGISTRY/budget-app-graph:latest
           
-          docker tag budget-app-eliorabaev_backend:latest $ECR_REGISTRY/budget-app-backend:${{ github.sha }}
-          docker tag budget-app-eliorabaev_frontend:latest $ECR_REGISTRY/budget-app-frontend:${{ github.sha }}
-          docker tag budget-app-eliorabaev_llm_microservice:latest $ECR_REGISTRY/budget-app-llm:${{ github.sha }}
-          docker tag budget-app-eliorabaev_graph_microservice:latest $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
+          docker tag budget-app-eliorabaev-backend:latest $ECR_REGISTRY/budget-app-backend:${{ github.sha }}
+          docker tag budget-app-eliorabaev-frontend:latest $ECR_REGISTRY/budget-app-frontend:${{ github.sha }}
+          docker tag budget-app-eliorabaev-llm_microservice:latest $ECR_REGISTRY/budget-app-llm:${{ github.sha }}
+          docker tag budget-app-eliorabaev-graph_microservice:latest $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
           
           # Push all images
           docker push $ECR_REGISTRY/budget-app-backend:latest

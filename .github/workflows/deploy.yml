@@ -85,11 +85,10 @@ jobs:
       # Deploy via SSM
       - name: Deploy to EC2
         run: |
-          # Run SSM command to deploy
           aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters '{"commands":["cd ~/budget-app-eliorabaev && git pull && ./deploy-from-ecr.sh && docker ps"]}' \
+            --parameters '{"commands":["cd ~/budget-app-eliorabaev", "git pull", "chmod +x ./deploy-from-ecr.sh", "./deploy-from-ecr.sh", "docker ps"]}' \
             --output text
           
           # Give some time for the command to complete

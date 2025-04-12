@@ -199,3 +199,4 @@ deploy-from-ecr.sh
 docker-compose.ecr.yml
 fetch-secrets.sh
 
+nginx/*.env

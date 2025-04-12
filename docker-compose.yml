@@ -1,39 +1,54 @@
-version: '3.8'
-
 services:
   backend:
     build:
       context: ./backend
     container_name: budget-app-backend
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       - PYTHONUNBUFFERED=1
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
-      - llm_microservice # Ensure LLM microservice starts before the backend
-
+      - llm_microservice
+    volumes:
+      - ./backend/app/llm_microservice/.env:/app/llm_microservice/.env
+  
   frontend:
     build:
       context: ./frontend
     container_name: budget-app-frontend
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     depends_on:
-      - backend # Ensure the backend service is started before the frontend
-
+      - backend
+  
   llm_microservice:
     build:
-      context: ./backend/app/llm_microservice # Path to the LLM microservice
+      context: ./backend/app/llm_microservice
     container_name: llm-microservice
-    ports:
-      - "8001:8001"
-
+    expose:
+      - "8001"
+    volumes:
+      - ./backend/app/llm_microservice/.env:/app/.env
+  
   graph_microservice:
     build:
       context: ./backend/app/graph_microservice
     container_name: graph-microservice
-    ports:
-      - "8002:8002"
+    expose:
+      - "8002"
     depends_on:
-      - backend # Ensure the backend service is started before the graph microservice
+      - backend
+  
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: budget-app-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+      - llm_microservice
+      - graph_microservice

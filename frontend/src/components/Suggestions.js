@@ -41,36 +41,51 @@ const Suggestions = () => {
             const balanceResponse = await fetch(`/api/balance/${balanceId}`);
             const incomeResponse = await fetch(`/api/incomes?balance_id=${balanceId}`);
             const expenseResponse = await fetch(`/api/expenses?balance_id=${balanceId}`);
-            const graphResponse = await getBalanceGraph(balanceId); // Fetch graph data
-
-            // Convert responses to JSON
+            
+            // Get graph data directly - handle the actual response format
+            const graphResponse = await getBalanceGraph(balanceId);
+            
+            // Safely extract data - add null checks and defaults
             const balanceData = await balanceResponse.json();
-            const incomes = await incomeResponse.json();
-            const expenses = await expenseResponse.json();
-            const graphData = graphResponse.data.balance_graph || [];
-            const projectedRevenue = graphResponse.data.projected_revenue || [];
-
-            // Calculate total income and expenses from JSON data
+            // Make sure these are arrays before using reduce
+            const incomes = Array.isArray(await incomeResponse.json()) ? await incomeResponse.json() : [];
+            const expenses = Array.isArray(await expenseResponse.json()) ? await expenseResponse.json() : [];
+            
+            // Extract graph data based on the actual response structure
+            let graphData = [];
+            let projectedRevenue = [];
+            
+            if (graphResponse && graphResponse.data) {
+                // Check what format the data actually is
+                console.log("Graph response data:", graphResponse.data);
+                
+                // If it's an array directly, use it
+                if (Array.isArray(graphResponse.data)) {
+                    graphData = graphResponse.data;
+                } 
+                // If it has nested arrays as expected
+                else if (graphResponse.data.balance_graph) {
+                    graphData = graphResponse.data.balance_graph;
+                    projectedRevenue = graphResponse.data.projected_revenue || [];
+                }
+            }
+    
+            // Calculate totals with null checks
             const totalIncome = incomes.reduce((sum, item) => sum + (item.amount || 0), 0);
             const totalExpense = expenses.reduce((sum, item) => sum + (item.amount || 0), 0);
             const cashFlow = totalIncome - totalExpense;
-
-            console.log("Total Income:", totalIncome);
-            console.log("Total Expense:", totalExpense);
-            console.log("Cash Flow:", cashFlow);
-
-            // Always show Balance Projection
+    
+            // Update state with the data
             setGraphData(graphData);
-
+            
             // Only show Projected Revenue if Cash Flow is positive
-            if (cashFlow > 0) {
+            if (cashFlow > 0 && projectedRevenue.length > 0) {
                 setProjectedRevenue(projectedRevenue.filter(data => data.projected_balance > 0));
             } else {
-                setProjectedRevenue([]);  // Hide Projected Revenue
+                setProjectedRevenue([]);
             }
-
         } catch (error) {
-            console.error('Error fetching balance, incomes, expenses, or graph data:', error.message);
+            console.error('Error fetching data:', error);
             setError('Failed to fetch balance graph, incomes, and expenses.');
         }
     };

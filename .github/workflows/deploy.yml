@@ -28,8 +28,15 @@ jobs:
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+
+      # Install Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
       
-      # Fixed parameter formatting for SSM command
+      # Stop containers on EC2 via SSM
       - name: First stop running containers on EC2
         run: |
           # Run SSM command to stop containers
@@ -75,7 +82,7 @@ jobs:
           docker push $ECR_REGISTRY/budget-app-llm:${{ github.sha }}
           docker push $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
       
-      # Fixed parameter formatting for SSM deployment command
+      # Deploy via SSM
       - name: Deploy to EC2
         run: |
           # Run SSM command to deploy

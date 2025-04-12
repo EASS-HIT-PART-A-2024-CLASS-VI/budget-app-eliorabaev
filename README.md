@@ -9,9 +9,10 @@
   [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org)
   [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
   [![Gemini AI](https://img.shields.io/badge/Gemini-AI-blue?style=for-the-badge&logo=google&logoColor=white)](https://gemini.google.com/chat)
+  [![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/)
 </div>
 
-The **Budget App** is a full-stack application designed to help users effectively manage their finances. Featuring a modern React frontend, a FastAPI backend, and cutting-edge technologies like LLM (Large Language Model) integration and Pydantic, this app provides personalized financial insights and suggestions based on user data. Dockerized for seamless deployment, the app supports a microservice architecture to enhance scalability.
+The **Budget App** is a full-stack application designed to help users effectively manage their finances. Featuring a modern React frontend, a FastAPI backend, and cutting-edge technologies like LLM (Large Language Model) integration and Pydantic, this app provides personalized financial insights and suggestions based on user data. Dockerized for seamless deployment, the app supports a microservice architecture to enhance scalability and uses Nginx as a reverse proxy for production-like environment both locally and in AWS.
 
 ---
 
@@ -22,6 +23,8 @@ The **Budget App** is a full-stack application designed to help users effectivel
 - **Microservices:** Modular FastAPI architecture ensures scalability and maintainability.
 - **Frontend Excellence:** Responsive React interface for a smooth user experience.
 - **Docker Support:** Simplified deployment with Docker Compose.
+- **Nginx Reverse Proxy:** Production-ready setup mirroring AWS deployment architecture.
+- **Interactive Visualizations:** Visual representation of your financial future and growth potential.
 
 ---
 
@@ -43,7 +46,8 @@ The **Budget App** is a full-stack application designed to help users effectivel
 budget-app/
 ├── backend/     # Backend FastAPI service
 ├── frontend/    # Frontend React service
-├── docker-compose.yml  # Orchestrates backend and frontend services
+├── nginx/       # Nginx reverse proxy configuration
+├── docker-compose.yml  # Orchestrates all services
 └── README.md    # Project documentation
 ```
 <div align="center">
@@ -80,10 +84,23 @@ This API key is required to enable the financial suggestion feature powered by G
 
 #### Installation
 
-Build and run the Docker containers:
+Build and run the Docker containers with Nginx:
 ```bash
-docker-compose up
+docker compose up -d
 ```
+
+#### Accessing the Application
+
+The application is now accessible through Nginx:
+```
+http://localhost
+```
+
+Nginx routes all requests to the appropriate services:
+- Frontend application at the root path
+- API requests at `/api/`
+- Health check at `/health`
+
 ---
 
 ## 📖 Backend
@@ -98,6 +115,7 @@ The backend is built with **FastAPI**, designed to provide financial insights, m
 ✅ **State Management** - Tracks balance, income, and expenses dynamically.  
 ✅ **Pydantic Validation** - Ensures robust data integrity.  
 ✅ **Dockerized** - Easy to deploy using Docker & Docker Compose.  
+✅ **API Gateway Pattern** - Routes requests through Nginx for security and load balancing.
 
 ### 📂 Backend Directory Structure
 ```bash
@@ -175,88 +193,96 @@ docker run -d --name budget-app-backend -p 8000:8000 budget-app-backend
 ```
 
 ### 3️⃣ Access API
-Open [http://localhost:8000](http://localhost:8000) to test the API.
+When using Nginx:
+```
+http://localhost/api/
+```
+
+Direct access (development only):
+```
+http://localhost:8000
+```
 
 ### 🔥 API Endpoints
 
 ### 📌 Balances
-- **POST /balance/** - Set an initial balance:
+- **POST /api/balance/** - Set an initial balance:
 ```sh
-curl -X POST "http://localhost:8000/balance/" -H "Content-Type: application/json" -d '{"amount": 1000}'
+curl -X POST "http://localhost/api/balance/" -H "Content-Type: application/json" -d '{"amount": 1000}'
 ```
-- **GET /balance/{balance_id}** - Retrieve balance:
+- **GET /api/balance/{balance_id}** - Retrieve balance:
 ```sh
-curl -X GET "http://localhost:8000/balance/1"
+curl -X GET "http://localhost/api/balance/1"
 ```
-- **PATCH /balance/{balance_id}** - Update balance:
+- **PATCH /api/balance/{balance_id}** - Update balance:
 ```sh
-curl -X PATCH "http://localhost:8000/balance/1" -H "Content-Type: application/json" -d '{"amount": 1500}'
+curl -X PATCH "http://localhost/api/balance/1" -H "Content-Type: application/json" -d '{"amount": 1500}'
 ```
 
 
 ### 📌 Incomes
-- **POST /incomes/** - Add income:
+- **POST /api/incomes/** - Add income:
 ```sh
-curl -X POST "http://localhost:8000/incomes/" -H "Content-Type: application/json" -d '{"balance_id": 1, "source": "Job", "amount": 500}'
+curl -X POST "http://localhost/api/incomes/" -H "Content-Type: application/json" -d '{"balance_id": 1, "source": "Job", "amount": 500}'
 ```
-- **GET /incomes/{income_id}** - Retrieve income:
+- **GET /api/incomes/{income_id}** - Retrieve income:
 ```sh
-curl -X GET "http://localhost:8000/incomes/1"
+curl -X GET "http://localhost/api/incomes/1"
 ```
-- **GET /incomes/** - Retrieve all incomes:
+- **GET /api/incomes/** - Retrieve all incomes:
 ```sh
-curl -X GET "http://localhost:8000/incomes/"
+curl -X GET "http://localhost/api/incomes/"
 ```
-- **PATCH /incomes/{income_id}** - Update income:
+- **PATCH /api/incomes/{income_id}** - Update income:
 ```sh
-curl -X PATCH "http://localhost:8000/incomes/1" -H "Content-Type: application/json" -d '{"amount": 600}'
+curl -X PATCH "http://localhost/api/incomes/1" -H "Content-Type: application/json" -d '{"amount": 600}'
 ```
 
 ### 📌 Expenses
-- **POST /expenses/** - Add an expense:
+- **POST /api/expenses/** - Add an expense:
 ```sh
-curl -X POST "http://localhost:8000/expenses/" -H "Content-Type: application/json" -d '{"balance_id": 1, "category": "Food", "amount": 100}'
+curl -X POST "http://localhost/api/expenses/" -H "Content-Type: application/json" -d '{"balance_id": 1, "category": "Food", "amount": 100}'
 ```
-- **GET /expenses/{expense_id}** - Retrieve expense:
+- **GET /api/expenses/{expense_id}** - Retrieve expense:
 ```sh
-curl -X GET "http://localhost:8000/expenses/1"
+curl -X GET "http://localhost/api/expenses/1"
 ```
-- **GET /expenses/** - Retrieve all expenses:
+- **GET /api/expenses/** - Retrieve all expenses:
 ```sh
-curl -X GET "http://localhost:8000/expenses/"
+curl -X GET "http://localhost/api/expenses/"
 ```
-- **PATCH /expenses/{expense_id}** - Update expense:
+- **PATCH /api/expenses/{expense_id}** - Update expense:
 ```sh
-curl -X PATCH "http://localhost:8000/expenses/1" -H "Content-Type: application/json" -d '{"amount": 120}'
+curl -X PATCH "http://localhost/api/expenses/1" -H "Content-Type: application/json" -d '{"amount": 120}'
 ```
 
 
 ### 📌 Financial Suggestions
-- **POST /suggestions/{balance_id}** - Get AI-powered financial recommendations:
+- **POST /api/suggestions/{balance_id}** - Get AI-powered financial recommendations:
 ```sh
-curl -X POST "http://localhost:8000/suggestions/1"
+curl -X POST "http://localhost/api/suggestions/1"
 ```
-- **GET /suggestions/{balance_id}** - Retrieve cached financial suggestions:
+- **GET /api/suggestions/{balance_id}** - Retrieve cached financial suggestions:
 ```sh
-curl -X GET "http://localhost:8000/suggestions/1"
+curl -X GET "http://localhost/api/suggestions/1"
 ```
-- **GET /balance/{balance_id}/graph** - Get balance projections and revenue estimates:
+- **GET /api/balance/{balance_id}/graph** - Get balance projections and revenue estimates:
 ```sh
-curl -X GET "http://localhost:8000/balance/1/graph"
+curl -X GET "http://localhost/api/balance/1/graph"
 ```
 
 ### 📌 Delete Data
-- **DELETE /incomes/{income_id}** - Delete income:
+- **DELETE /api/incomes/{income_id}** - Delete income:
 ```sh
-curl -X DELETE "http://localhost:8000/incomes/1"
+curl -X DELETE "http://localhost/api/incomes/1"
 ```
-- **DELETE /expenses/{expense_id}** - Delete expense ():
+- **DELETE /api/expenses/{expense_id}** - Delete expense:
 ```sh
-curl -X DELETE "http://localhost:8000/expenses/1"
+curl -X DELETE "http://localhost/api/expenses/1"
 ```
-- **DELETE /balance/{balance_id}** - Delete balance:
+- **DELETE /api/balance/{balance_id}** - Delete balance:
 ```sh
-curl -X DELETE "http://localhost:8000/balance/1"
+curl -X DELETE "http://localhost/api/balance/1"
 ```
 
 
@@ -267,6 +293,7 @@ curl -X DELETE "http://localhost:8000/balance/1"
 - 🐳 Docker
 - ⚡ Uvicorn
 - 🧪 Pytest
+- 🌐 Nginx (Reverse Proxy)
 
 ### 🧪 Running Tests
 - **run these commands from the root of the project!**
@@ -440,6 +467,43 @@ This is a FastAPI-based service that provides financial balance projections and 
 
 ---
 
+## 🔧 Nginx Configuration
+
+### 📌 Overview
+The application uses Nginx as a reverse proxy to route traffic to the appropriate microservices, providing a production-like environment that matches the AWS deployment setup.
+
+### ✨ Features
+✅ Single entry point for all services  
+✅ Path-based routing to microservices  
+✅ Production-ready configuration  
+✅ Health endpoint for monitoring  
+✅ Matches AWS deployment environment locally  
+
+### 📂 Structure
+```sh
+nginx/
+├── Dockerfile            # Nginx Docker configuration
+└── nginx.conf           # Nginx server configuration
+```
+
+### 🔧 Configuration
+The Nginx configuration routes traffic based on URL paths:
+- `/` → Frontend (React app)
+- `/api/` → Backend (FastAPI)
+- `/graph/` → Graph microservice
+- `/llm/` → LLM microservice
+- `/health` → Health check endpoint
+
+### 🚀 Accessing Services
+With Nginx properly configured, all services are accessed through a single port:
+```
+http://localhost/           # Frontend
+http://localhost/api/       # Backend API
+http://localhost/health     # Health check
+```
+
+---
+
 ## 🌐 Frontend
 
 The frontend of the Budget App is built using **React** to provide a seamless and responsive user experience. It integrates with backend services to offer real-time financial insights, utilizing modern web development practices.
@@ -451,6 +515,7 @@ The frontend of the Budget App is built using **React** to provide a seamless an
 - **Modular Architecture:** Built with reusable React components to maintain scalability and maintainability.
 - **Theming & Styling:** Implements CSS variables and modular CSS for a consistent UI/UX.
 - **Robust Error Handling:** Uses an `ErrorBoundary` component to prevent application crashes.
+- **API Integration:** Communicates with backend through Nginx reverse proxy for consistent behavior between local and AWS environments.
 
 ### 📂 Structure
 
@@ -535,6 +600,7 @@ This will execute all test cases using Jest and React Testing Library.
 - Ensure API responses are handled gracefully with proper error boundaries.
 - Use `sessionStorage` wisely to minimize redundant API requests.
 - Maintain consistent styling with CSS modules and variables.
+- All API calls should use the `/api/` prefix to work correctly with Nginx.
 
 This frontend is designed to be efficient, scalable, and user-friendly, making financial planning effortless for users.
 
@@ -543,4 +609,8 @@ This frontend is designed to be efficient, scalable, and user-friendly, making f
 
 ## 🎉 Conclusion
 
-Thank you for exploring the **Budget App**! Feel free to contribute, report issues, or suggest enhancements. Happy budgeting! 🤑
+Thank you for exploring the **Budget App**! This project demonstrates a modern microservices architecture with a production-ready setup using Nginx as a reverse proxy. The local environment now mirrors the AWS deployment configuration, ensuring a smooth transition from development to production.
+
+The application provides valuable financial insights powered by AI, interactive visualizations, and a user-friendly interface. Feel free to contribute, report issues, or suggest enhancements.
+
+Happy budgeting! 🤑

@@ -39,17 +39,36 @@ const Suggestions = () => {
         try {
             // Fetch data separately
             const balanceResponse = await fetch(`/api/balance/${balanceId}`);
-            const incomeResponse = await fetch(`/api/incomes?balance_id=${balanceId}`);
-            const expenseResponse = await fetch(`/api/expenses?balance_id=${balanceId}`);
+            const incomeResponse = await fetch(`/api/incomes/?balance_id=${balanceId}`);
+            const expenseResponse = await fetch(`/api/expenses/?balance_id=${balanceId}`);
             
-            // Get graph data directly - handle the actual response format
+            // Get graph data directly
             const graphResponse = await getBalanceGraph(balanceId);
             
-            // Safely extract data - add null checks and defaults
+            // Parse JSON once and store the result
             const balanceData = await balanceResponse.json();
-            // Make sure these are arrays before using reduce
-            const incomes = Array.isArray(await incomeResponse.json()) ? await incomeResponse.json() : [];
-            const expenses = Array.isArray(await expenseResponse.json()) ? await expenseResponse.json() : [];
+            let incomeData = [];
+            let expenseData = [];
+            
+            try {
+                // Safely parse income data
+                const incomeResult = await incomeResponse.json();
+                if (Array.isArray(incomeResult)) {
+                    incomeData = incomeResult;
+                }
+            } catch (err) {
+                console.warn('Error parsing income data:', err);
+            }
+            
+            try {
+                // Safely parse expense data
+                const expenseResult = await expenseResponse.json();
+                if (Array.isArray(expenseResult)) {
+                    expenseData = expenseResult;
+                }
+            } catch (err) {
+                console.warn('Error parsing expense data:', err);
+            }
             
             // Extract graph data based on the actual response structure
             let graphData = [];
@@ -71,8 +90,8 @@ const Suggestions = () => {
             }
     
             // Calculate totals with null checks
-            const totalIncome = incomes.reduce((sum, item) => sum + (item.amount || 0), 0);
-            const totalExpense = expenses.reduce((sum, item) => sum + (item.amount || 0), 0);
+            const totalIncome = incomeData.reduce((sum, item) => sum + (item.amount || 0), 0);
+            const totalExpense = expenseData.reduce((sum, item) => sum + (item.amount || 0), 0);
             const cashFlow = totalIncome - totalExpense;
     
             // Update state with the data

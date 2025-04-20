@@ -119,11 +119,7 @@ jobs:
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters '{"commands":[
-              "cd /home/ubuntu/budget-app-eliorabaev", 
-              "git pull",
-              "chmod +x ./deploy-from-ecr.sh",
-              "./deploy-from-ecr.sh",
-              "docker ps"
+              "cd /home/ubuntu/budget-app-eliorabaev && git pull && chmod +x ./deploy-from-ecr.sh && ./deploy-from-ecr.sh && docker ps" 
             ]}' \
             --output json | jq -r '.Command.CommandId')
           

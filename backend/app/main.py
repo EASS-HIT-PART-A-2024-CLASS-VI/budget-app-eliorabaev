@@ -5,7 +5,7 @@ from core.config import settings
 from state import lifespan
 
 app = FastAPI(
-    redirect_slashes=False,
+    redirect_slashes=True,
     title=settings.app_name,
     version=settings.version,
     debug=settings.debug,  # Enable/Disable debug mode

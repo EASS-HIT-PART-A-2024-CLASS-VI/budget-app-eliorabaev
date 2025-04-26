@@ -4,8 +4,11 @@ FROM python:3.12-slim
 # Set the working directory in the container to /app
 WORKDIR /app
 
-# Install build tools for dependencies (if required, e.g., for wheels)
-RUN apt-get update && apt-get install -y gcc && apt-get clean
+# Install build tools and MySQL client
+RUN apt-get update && \
+    apt-get install -y gcc default-libmysqlclient-dev pkg-config && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the working directory
 COPY ./app/requirements.txt /app/requirements.txt
@@ -22,5 +25,9 @@ EXPOSE 8000
 # Set environment variable to prevent Python from buffering stdout and stderr
 ENV PYTHONUNBUFFERED=1
 
+# Wait for MySQL to be ready, then start the application
+COPY ./wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
 # Command to run the application using Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["/wait-for-it.sh", "mysql:3306", "--", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -7,9 +7,14 @@ services:
       - "8000"
     environment:
       - PYTHONUNBUFFERED=1
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      - DB_HOST=mysql
+      - DB_USER=budget_user
+      - DB_PASSWORD=budget_password
+      - DB_NAME=budget_db
+    command: sh -c "sleep 10 && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     depends_on:
-      - llm_microservice
+      mysql:
+        condition: service_healthy
     volumes:
       - ./backend/app/llm_microservice/.env:/app/llm_microservice/.env
   
@@ -52,3 +57,28 @@ services:
       - frontend
       - llm_microservice
       - graph_microservice
+
+  mysql:
+    image: mysql:8.0
+    container_name: budget-app-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: budget_db
+      MYSQL_USER: budget_user
+      MYSQL_PASSWORD: budget_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  mysql-data:

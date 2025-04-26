@@ -1,29 +1,45 @@
-from fastapi import APIRouter, Request
-from models.balance import Expense, UpdateExpense
-from typing import List
-from core.utils import get_balance_or_404
-from services.expense_service import add_expense, get_expense_by_id, get_all_expenses, update_expense, delete_expense
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+from typing import List, Optional
+
+import crud
+from db.database import get_db
+from schemas.balance import Expense, ExpenseCreate, ExpenseUpdate
 
 router = APIRouter()
 
 @router.post("/", response_model=Expense)
-async def create_expense(request: Request, expense: Expense):
-    budget_state = request.app.state.budget_state
-    get_balance_or_404(budget_state, expense.balance_id)  # Validate balance ID
-    return await add_expense(request, expense)
+async def create_expense_endpoint(expense: ExpenseCreate, db: Session = Depends(get_db)):
+    return crud.expense.create_expense(db, expense)
 
 @router.get("/{expense_id}", response_model=Expense)
-async def retrieve_expense(request: Request, expense_id: int):
-    return await get_expense_by_id(request, expense_id)
+async def get_expense_endpoint(expense_id: int, db: Session = Depends(get_db)):
+    db_expense = crud.expense.get_expense(db, expense_id)
+    if db_expense is None:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return db_expense
 
 @router.get("/", response_model=List[Expense])
-async def retrieve_all_expenses(request: Request):
-    return await get_all_expenses(request)
+async def get_all_expenses_endpoint(
+    balance_id: Optional[int] = Query(None, description="Filter expenses by balance ID"),
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    if balance_id:
+        return crud.expense.get_expenses_by_balance(db, balance_id)
+    return crud.expense.get_all_expenses(db, skip, limit)
 
 @router.patch("/{expense_id}", response_model=Expense)
-async def update_expense_endpoint(request: Request, expense_id: int, updated_expense: UpdateExpense):
-    return await update_expense(request, expense_id, updated_expense)
+async def update_expense_endpoint(expense_id: int, expense: ExpenseUpdate, db: Session = Depends(get_db)):
+    db_expense = crud.expense.update_expense(db, expense_id, expense)
+    if db_expense is None:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return db_expense
 
 @router.delete("/{expense_id}", status_code=204)
-async def delete_expense_endpoint(request: Request, expense_id: int):
-    await delete_expense(request, expense_id)
+async def delete_expense_endpoint(expense_id: int, db: Session = Depends(get_db)):
+    success = crud.expense.delete_expense(db, expense_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return {"status": "success"}

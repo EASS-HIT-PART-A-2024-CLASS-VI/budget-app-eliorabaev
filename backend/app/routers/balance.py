@@ -5,6 +5,7 @@ from typing import List
 import crud
 from db.database import get_db
 from schemas.balance import Balance, BalanceCreate, BalanceUpdate
+from dependencies import validate_balance_id
 import httpx
 
 router = APIRouter()
@@ -16,12 +17,14 @@ async def create_balance_endpoint(balance: BalanceCreate, db: Session = Depends(
     return crud.balance.create_balance(db, balance)
 
 @router.get("/{balance_id}", response_model=Balance)
-async def get_balance_endpoint(balance_id: int, db: Session = Depends(get_db)):
+async def get_balance_endpoint(
+    balance_id: int = Depends(validate_balance_id), 
+    db: Session = Depends(get_db)
+):
     db_balance = crud.balance.get_balance(db, balance_id)
     if db_balance is None:
         raise HTTPException(status_code=404, detail="Balance not found")
     return db_balance
-
 @router.patch("/{balance_id}", response_model=Balance)
 async def update_balance_endpoint(balance_id: int, balance: BalanceUpdate, db: Session = Depends(get_db)):
     db_balance = crud.balance.update_balance(db, balance_id, balance)

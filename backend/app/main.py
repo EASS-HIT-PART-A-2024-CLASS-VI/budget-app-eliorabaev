@@ -1,6 +1,8 @@
+# backend/app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from middleware.validation import RequestValidationMiddleware
 from routers import balance, income, expense, suggestions
 from core.config import settings
 from db import init_db
@@ -13,7 +15,6 @@ logger = logging.getLogger(__name__)
 # Lifespan context manager to initialize the database at startup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize the database with error handling
     try:
         logger.info("Initializing database...")
         init_db()
@@ -28,14 +29,17 @@ app = FastAPI(
     redirect_slashes=True,
     title=settings.app_name,
     version=settings.version,
-    debug=settings.debug,  # Enable/Disable debug mode
+    debug=settings.debug,
     lifespan=lifespan
 )
+
+# Add the validation middleware
+app.add_middleware(RequestValidationMiddleware)
 
 # Set up CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,  # Load origins from centralized config
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

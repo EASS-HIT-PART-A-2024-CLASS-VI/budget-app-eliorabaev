@@ -1,12 +1,9 @@
-# backend/app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from middleware.validation import RequestValidationMiddleware
 from routers import balance, income, expense, suggestions
 from core.config import settings
-from core.errors import add_exception_handlers
-
 from db import init_db
 import logging
 
@@ -35,10 +32,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add the validation middleware
+# Add the validation middleware - IMPORTANT: add this before CORSMiddleware
 app.add_middleware(RequestValidationMiddleware)
-
-add_exception_handlers(app)
 
 # Set up CORS
 app.add_middleware(

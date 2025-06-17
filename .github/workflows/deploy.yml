@@ -98,20 +98,16 @@ jobs:
           COMPOSE_DOCKER_CLI_BUILD: 1
         run: |
           echo "🔧 Preparing build environment..."
-          # Create temporary .env file for build
           mkdir -p backend/app/llm_microservice
           echo "GEMINI_API_KEY=dummy-value-for-build" > backend/app/llm_microservice/.env
           
           echo "🏗️ Building images with docker-compose (with caching)..."
-          # Export cache variables for Docker Buildx
           export BUILDX_CACHE_FROM="type=local,src=/tmp/.buildx-cache"
           export BUILDX_CACHE_TO="type=local,dest=/tmp/.buildx-cache-new,mode=max"
           
-          # Build images using your existing docker-compose approach
           docker-compose build
           
           echo "🏷️ Tagging images..."
-          # Keep your original image naming - don't break deployment
           docker tag budget-app-eliorabaev-backend:latest $ECR_REGISTRY/budget-app-backend:latest
           docker tag budget-app-eliorabaev-frontend:latest $ECR_REGISTRY/budget-app-frontend:latest
           docker tag budget-app-eliorabaev-llm_microservice:latest $ECR_REGISTRY/budget-app-llm:latest
@@ -123,20 +119,18 @@ jobs:
           docker tag budget-app-eliorabaev-graph_microservice:latest $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
           
           echo "📤 Pushing images to ECR..."
-          # Push all images in parallel for faster upload
           (docker push $ECR_REGISTRY/budget-app-backend:latest &)
           (docker push $ECR_REGISTRY/budget-app-frontend:latest &)
           (docker push $ECR_REGISTRY/budget-app-llm:latest &)
           (docker push $ECR_REGISTRY/budget-app-graph:latest &)
-          wait  # Wait for all background pushes to complete
+          wait
           
           echo "📤 Pushing SHA-tagged images..."
           (docker push $ECR_REGISTRY/budget-app-backend:${{ github.sha }} &)
           (docker push $ECR_REGISTRY/budget-app-frontend:${{ github.sha }} &)
           (docker push $ECR_REGISTRY/budget-app-llm:${{ github.sha }} &)
           (docker push $ECR_REGISTRY/budget-app-graph:${{ github.sha }} &)
-          wait  # Wait for all background pushes to complete
-          
+          wait
           echo "✅ All images built and pushed successfully"
 
       - name: Move cache

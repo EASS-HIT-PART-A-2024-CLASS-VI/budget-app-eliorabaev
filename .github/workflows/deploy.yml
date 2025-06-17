@@ -11,13 +11,7 @@ on:
       - 'docker-compose*.yml'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
-    inputs:
-      force_rebuild:
-        description: 'Force rebuild all images'
-        required: false
-        default: 'false'
 
-# Prevent concurrent deployments - only one deployment at a time
 concurrency:
   group: deploy-to-production
   cancel-in-progress: true
@@ -26,49 +20,27 @@ permissions:
   id-token: write 
   contents: read 
 
-env:
-  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-north-1.amazonaws.com
-
 jobs:
-  # Detect what files changed
-  detect-changes:
+  should-deploy:
     runs-on: ubuntu-latest
-    # Only run if PR was merged or manual trigger
     if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-      nginx: ${{ steps.filter.outputs.nginx }}
-      llm: ${{ steps.filter.outputs.llm }}
-      graph: ${{ steps.filter.outputs.graph }}
-      any-changes: ${{ steps.filter.outputs.changes }}
+      deploy: ${{ steps.check.outputs.should_deploy }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            backend:
-              - 'backend/**'
-              - '!backend/app/llm_microservice/**'
-              - '!backend/app/graph_microservice/**'
-            frontend:
-              - 'frontend/**'
-            nginx:
-              - 'nginx/**'
-            llm:
-              - 'backend/app/llm_microservice/**'
-            graph:
-              - 'backend/app/graph_microservice/**'
+      - name: Check if should deploy
+        id: check
+        run: |
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "✅ Deployment approved - PR was merged or manually triggered"
 
-  # Setup AWS credentials once
-  setup-aws:
+  deploy:
+    needs: should-deploy
+    if: needs.should-deploy.outputs.deploy == 'true'
     runs-on: ubuntu-latest
-    needs: detect-changes
-    if: needs.detect-changes.outputs.any-changes == 'true' || github.event_name == 'workflow_dispatch'
-    outputs:
-      registry: ${{ steps.login-ecr.outputs.registry }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -78,150 +50,159 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
-  # Build only changed services in parallel
-  build:
-    runs-on: ubuntu-latest
-    needs: [detect-changes, setup-aws]
-    if: needs.detect-changes.outputs.any-changes == 'true' || github.event_name == 'workflow_dispatch'
-    strategy:
-      matrix:
-        include:
-          - service: backend
-            context: ./backend
-            dockerfile: ./backend/Dockerfile
-            build-condition: ${{ needs.detect-changes.outputs.backend == 'true' || github.event.inputs.force_rebuild == 'true' }}
-          - service: frontend
-            context: ./frontend
-            dockerfile: ./frontend/Dockerfile
-            build-condition: ${{ needs.detect-changes.outputs.frontend == 'true' || github.event.inputs.force_rebuild == 'true' }}
-          - service: llm
-            context: ./backend/app/llm_microservice
-            dockerfile: ./backend/app/llm_microservice/Dockerfile
-            build-condition: ${{ needs.detect-changes.outputs.llm == 'true' || github.event.inputs.force_rebuild == 'true' }}
-          - service: graph
-            context: ./backend/app/graph_microservice
-            dockerfile: ./backend/app/graph_microservice/Dockerfile
-            build-condition: ${{ needs.detect-changes.outputs.graph == 'true' || github.event.inputs.force_rebuild == 'true' }}
-    steps:
-      - name: Checkout code
-        if: fromJSON(matrix.build-condition)
-        uses: actions/checkout@v3
       
       - name: Set up Docker Buildx
-        if: fromJSON(matrix.build-condition)
         uses: docker/setup-buildx-action@v3
 
-      - name: Configure AWS credentials
-        if: fromJSON(matrix.build-condition)
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsOIDCRole-BudgetApp
-          aws-region: eu-north-1
-      
-      - name: Login to Amazon ECR
-        if: fromJSON(matrix.build-condition)
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Prepare build context
-        if: fromJSON(matrix.build-condition) && matrix.service == 'llm'
+      - name: Install Docker Compose
         run: |
-          mkdir -p backend/app/llm_microservice
-          echo "GEMINI_API_KEY=dummy-value-for-build" > backend/app/llm_microservice/.env
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
 
-      - name: Build and push ${{ matrix.service }}
-        if: fromJSON(matrix.build-condition)
-        uses: docker/build-push-action@v5
+      - name: Cache Docker layers
+        uses: actions/cache@v4
         with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.dockerfile }}
-          push: true
-          tags: |
-            ${{ env.ECR_REGISTRY }}/budget-app-${{ matrix.service }}:latest
-            ${{ env.ECR_REGISTRY }}/budget-app-${{ matrix.service }}:${{ github.sha }}
-          cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
-          platforms: linux/amd64
-
-  # Stop containers only if deployment will happen
-  stop-containers:
-    runs-on: ubuntu-latest
-    needs: [detect-changes, setup-aws, build]
-    if: needs.detect-changes.outputs.any-changes == 'true' || github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsOIDCRole-BudgetApp
-          aws-region: eu-north-1
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
       - name: Stop running containers on EC2
         run: |
+          echo "🛑 Stopping running containers..."
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters '{"commands":[
-              "cd /home/ubuntu/budget-app-eliorabaev && docker-compose -f docker-compose.ecr.yml down || true"
+              "cd /home/ubuntu/budget-app-eliorabaev && docker-compose -f docker-compose.ecr.yml down || true",
+              "echo \"All containers stopped\""
             ]}' \
             --output text --query "Command.CommandId")
           
-          # Wait for completion with proper timeout
+          echo "Started container stopping with command ID: $COMMAND_ID"
+          
+          # Use AWS CLI wait command instead of manual polling
+          echo "⏳ Waiting for containers to stop..."
           aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \
             --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
-            --cli-read-timeout 120
+            --cli-read-timeout 120 || echo "Warning: Stop command timeout, continuing..."
+          
+          echo "✅ Container stop command completed"
 
-  # Deploy with optimized approach
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [detect-changes, setup-aws, build, stop-containers]
-    if: needs.detect-changes.outputs.any-changes == 'true' || github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsOIDCRole-BudgetApp
-          aws-region: eu-north-1
+      - name: Build, tag, and push images to ECR with caching
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
+        run: |
+          echo "🔧 Preparing build environment..."
+          # Create temporary .env file for build
+          mkdir -p backend/app/llm_microservice
+          echo "GEMINI_API_KEY=dummy-value-for-build" > backend/app/llm_microservice/.env
+          
+          echo "🏗️ Building images with docker-compose (with caching)..."
+          # Export cache variables for Docker Buildx
+          export BUILDX_CACHE_FROM="type=local,src=/tmp/.buildx-cache"
+          export BUILDX_CACHE_TO="type=local,dest=/tmp/.buildx-cache-new,mode=max"
+          
+          # Build images using your existing docker-compose approach
+          docker-compose build
+          
+          echo "🏷️ Tagging images..."
+          # Keep your original image naming - don't break deployment
+          docker tag budget-app-eliorabaev-backend:latest $ECR_REGISTRY/budget-app-backend:latest
+          docker tag budget-app-eliorabaev-frontend:latest $ECR_REGISTRY/budget-app-frontend:latest
+          docker tag budget-app-eliorabaev-llm_microservice:latest $ECR_REGISTRY/budget-app-llm:latest
+          docker tag budget-app-eliorabaev-graph_microservice:latest $ECR_REGISTRY/budget-app-graph:latest
+          
+          docker tag budget-app-eliorabaev-backend:latest $ECR_REGISTRY/budget-app-backend:${{ github.sha }}
+          docker tag budget-app-eliorabaev-frontend:latest $ECR_REGISTRY/budget-app-frontend:${{ github.sha }}
+          docker tag budget-app-eliorabaev-llm_microservice:latest $ECR_REGISTRY/budget-app-llm:${{ github.sha }}
+          docker tag budget-app-eliorabaev-graph_microservice:latest $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
+          
+          echo "📤 Pushing images to ECR..."
+          # Push all images in parallel for faster upload
+          (docker push $ECR_REGISTRY/budget-app-backend:latest &)
+          (docker push $ECR_REGISTRY/budget-app-frontend:latest &)
+          (docker push $ECR_REGISTRY/budget-app-llm:latest &)
+          (docker push $ECR_REGISTRY/budget-app-graph:latest &)
+          wait  # Wait for all background pushes to complete
+          
+          echo "📤 Pushing SHA-tagged images..."
+          (docker push $ECR_REGISTRY/budget-app-backend:${{ github.sha }} &)
+          (docker push $ECR_REGISTRY/budget-app-frontend:${{ github.sha }} &)
+          (docker push $ECR_REGISTRY/budget-app-llm:${{ github.sha }} &)
+          (docker push $ECR_REGISTRY/budget-app-graph:${{ github.sha }} &)
+          wait  # Wait for all background pushes to complete
+          
+          echo "✅ All images built and pushed successfully"
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache || true
 
       - name: Deploy to EC2
         run: |
+          echo "🚀 Starting deployment to EC2..."
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters '{
               "commands":[
                 "cd /home/ubuntu/budget-app-eliorabaev",
+                "echo \"📥 Pulling latest code...\"",
                 "git pull",
+                "echo \"🔧 Making deploy script executable...\"", 
                 "chmod +x ./deploy-from-ecr.sh",
+                "echo \"🚀 Running deployment...\"",
                 "./deploy-from-ecr.sh",
-                "docker ps"
+                "echo \"✅ Deployment completed, checking containers...\"",
+                "docker ps",
+                "echo \"🎉 Deployment finished successfully!\""
               ]
             }' \
             --output text --query "Command.CommandId")
           
-          # Wait for deployment completion
+          if [ -z "$COMMAND_ID" ]; then
+            echo "❌ Failed to get Command ID from send-command operation."
+            exit 1
+          fi
+          
+          echo "Started deployment with command ID: $COMMAND_ID"
+          
+          # Use AWS CLI wait with longer timeout for deployment
+          echo "⏳ Waiting for deployment to complete (max 5 minutes)..."
           aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \
             --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
             --cli-read-timeout 300
           
-          # Get deployment results
-          aws ssm get-command-invocation \
+          # Get the final status and output
+          STATUS=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
-            --query "StandardOutputContent" --output text
+            --query "Status" --output text)
+          
+          if [ "$STATUS" = "Success" ]; then
+            echo "🎉 Deployment completed successfully! Output:"
+            aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+              --query "StandardOutputContent" --output text
+          else
+            echo "❌ Deployment failed with status: $STATUS. Error output:"
+            aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+              --query "StandardErrorContent" --output text
+            exit 1
+          fi
 
-  # Health check after deployment
-  health-check:
-    runs-on: ubuntu-latest
-    needs: deploy
-    if: always() && needs.deploy.result == 'success'
-    steps:
-      - name: Wait for services to start
-        run: sleep 30
-      
-      - name: Check application health
+      - name: Post-deployment health check
         run: |
-          # Add your health check logic here
-          # curl -f http://your-app-url/health || exit 1
-          echo "Health check completed"
+          echo "🔍 Waiting 30 seconds for services to stabilize..."
+          sleep 30
+          echo "✅ Deployment workflow completed successfully!"

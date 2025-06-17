@@ -1,16 +1,41 @@
-name: Deploy to AWS
+name: Deploy to AWS ECR and EC2
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches: [ main ]
-  workflow_dispatch:  # Allow manual trigger
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'nginx/**'
+      - 'docker-compose*.yml'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-to-production
+  cancel-in-progress: true
 
 permissions:
   id-token: write 
   contents: read 
 
 jobs:
+  should-deploy:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+    outputs:
+      deploy: ${{ steps.check.outputs.should_deploy }}
+    steps:
+      - name: Check if should deploy
+        id: check
+        run: |
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "✅ Deployment approved - PR was merged or manually triggered"
+
   deploy:
+    needs: should-deploy
+    if: needs.should-deploy.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -27,19 +52,25 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
-      # Install Docker Compose
       - name: Install Docker Compose
         run: |
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
-      
-      # First stop running containers on EC2 via SSM
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Stop running containers on EC2
         run: |
-          # Send command and capture ID
+          echo "🛑 Stopping running containers..."
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
@@ -47,49 +78,36 @@ jobs:
               "cd /home/ubuntu/budget-app-eliorabaev && docker-compose -f docker-compose.ecr.yml down || true",
               "echo \"All containers stopped\""
             ]}' \
-            --output json | jq -r '.Command.CommandId')
+            --output text --query "Command.CommandId")
           
           echo "Started container stopping with command ID: $COMMAND_ID"
           
-          # Poll until command completes
-          STATUS="InProgress"
-          while [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Pending" ]; do
-            echo "Waiting for stop command to complete... Current status: $STATUS"
-            sleep 5
-            
-            STATUS=$(aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
-              --query "Status" --output text || echo "Failed to get status")
-          done
+          # Use AWS CLI wait command instead of manual polling
+          echo "⏳ Waiting for containers to stop..."
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --cli-read-timeout 120 || echo "Warning: Stop command timeout, continuing..."
           
-          if [ "$STATUS" = "Success" ]; then
-            echo "Successfully stopped containers. Output:"
-            aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
-              --query "StandardOutputContent" --output text
-          else
-            echo "Warning: Command completed with status: $STATUS. Error output:"
-            aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
-              --query "StandardErrorContent" --output text
-            # Not failing the build since the directory might not exist yet on first run
-          fi
-      
-      - name: Build, tag, and push images to ECR
+          echo "✅ Container stop command completed"
+
+      - name: Build, tag, and push images to ECR with caching
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
         run: |
-          # Create temporary .env file for build
+          echo "🔧 Preparing build environment..."
           mkdir -p backend/app/llm_microservice
           echo "GEMINI_API_KEY=dummy-value-for-build" > backend/app/llm_microservice/.env
           
-          # Build images
+          echo "🏗️ Building images with docker-compose (with caching)..."
+          export BUILDX_CACHE_FROM="type=local,src=/tmp/.buildx-cache"
+          export BUILDX_CACHE_TO="type=local,dest=/tmp/.buildx-cache-new,mode=max"
+          
           docker-compose build
           
-          # Tag images with latest and git SHA for versioning
+          echo "🏷️ Tagging images..."
           docker tag budget-app-eliorabaev-backend:latest $ECR_REGISTRY/budget-app-backend:latest
           docker tag budget-app-eliorabaev-frontend:latest $ECR_REGISTRY/budget-app-frontend:latest
           docker tag budget-app-eliorabaev-llm_microservice:latest $ECR_REGISTRY/budget-app-llm:latest
@@ -100,75 +118,85 @@ jobs:
           docker tag budget-app-eliorabaev-llm_microservice:latest $ECR_REGISTRY/budget-app-llm:${{ github.sha }}
           docker tag budget-app-eliorabaev-graph_microservice:latest $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
           
-          # Push all images
-          docker push $ECR_REGISTRY/budget-app-backend:latest
-          docker push $ECR_REGISTRY/budget-app-frontend:latest
-          docker push $ECR_REGISTRY/budget-app-llm:latest
-          docker push $ECR_REGISTRY/budget-app-graph:latest
+          echo "📤 Pushing images to ECR..."
+          (docker push $ECR_REGISTRY/budget-app-backend:latest &)
+          (docker push $ECR_REGISTRY/budget-app-frontend:latest &)
+          (docker push $ECR_REGISTRY/budget-app-llm:latest &)
+          (docker push $ECR_REGISTRY/budget-app-graph:latest &)
+          wait
           
-          docker push $ECR_REGISTRY/budget-app-backend:${{ github.sha }}
-          docker push $ECR_REGISTRY/budget-app-frontend:${{ github.sha }}
-          docker push $ECR_REGISTRY/budget-app-llm:${{ github.sha }}
-          docker push $ECR_REGISTRY/budget-app-graph:${{ github.sha }}
-      
-      # Deploy via SSM with proper path and polling
+          echo "📤 Pushing SHA-tagged images..."
+          (docker push $ECR_REGISTRY/budget-app-backend:${{ github.sha }} &)
+          (docker push $ECR_REGISTRY/budget-app-frontend:${{ github.sha }} &)
+          (docker push $ECR_REGISTRY/budget-app-llm:${{ github.sha }} &)
+          (docker push $ECR_REGISTRY/budget-app-graph:${{ github.sha }} &)
+          wait
+          echo "✅ All images built and pushed successfully"
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache || true
+
       - name: Deploy to EC2
         run: |
-          # Send command and capture ID
+          echo "🚀 Starting deployment to EC2..."
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters '{
               "commands":[
-                "sudo -H -u ubuntu bash -c \"export HOME=/home/ubuntu && cd /home/ubuntu/budget-app-eliorabaev && git pull && chmod +x ./deploy-from-ecr.sh && ./deploy-from-ecr.sh && docker ps\""
+                "cd /home/ubuntu/budget-app-eliorabaev",
+                "echo \"📥 Pulling latest code...\"",
+                "git pull",
+                "echo \"🔧 Making deploy script executable...\"", 
+                "chmod +x ./deploy-from-ecr.sh",
+                "echo \"🚀 Running deployment...\"",
+                "./deploy-from-ecr.sh",
+                "echo \"✅ Deployment completed, checking containers...\"",
+                "docker ps",
+                "echo \"🎉 Deployment finished successfully!\""
               ]
             }' \
-            --output json | jq -r '.Command.CommandId')
+            --output text --query "Command.CommandId")
           
-          # Check if COMMAND_ID is empty (for better error handling)
           if [ -z "$COMMAND_ID" ]; then
-            echo "Failed to get Command ID from send-command operation."
+            echo "❌ Failed to get Command ID from send-command operation."
             exit 1
           fi
           
           echo "Started deployment with command ID: $COMMAND_ID"
           
-          # Poll until command completes
-          STATUS="InProgress"
-          ATTEMPTS=0
-          MAX_ATTEMPTS=12  # 2 minutes (12 * 10 seconds)
+          # Use AWS CLI wait with longer timeout for deployment
+          echo "⏳ Waiting for deployment to complete (max 5 minutes)..."
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --cli-read-timeout 300
           
-          while [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Pending" ]; do
-            echo "Waiting for deployment command to complete... Current status: $STATUS"
-            sleep 10
-            
-            ATTEMPTS=$((ATTEMPTS+1))
-            if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-              echo "Timed out waiting for command to complete"
-              exit 1
-            fi
-            
-            STATUS=$(aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
-              --query "Status" --output text || echo "Failed to get status")
-          done
+          # Get the final status and output
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query "Status" --output text)
           
-          # Check the final status
           if [ "$STATUS" = "Success" ]; then
-            echo "Deployment completed successfully! Output:"
+            echo "🎉 Deployment completed successfully! Output:"
             aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
               --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
               --query "StandardOutputContent" --output text
           else
-            echo "Deployment failed with status: $STATUS. Error output:"
-            # Avoid running get-command-invocation again if the initial command failed
-            if [ "$STATUS" != "Failed to get status" ]; then
-              aws ssm get-command-invocation \
-                --command-id "$COMMAND_ID" \
-                --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
-                --query "StandardErrorContent" --output text
-            fi
+            echo "❌ Deployment failed with status: $STATUS. Error output:"
+            aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+              --query "StandardErrorContent" --output text
             exit 1
           fi
+
+      - name: Post-deployment health check
+        run: |
+          echo "🔍 Waiting 30 seconds for services to stabilize..."
+          sleep 30
+          echo "✅ Deployment workflow completed successfully!"

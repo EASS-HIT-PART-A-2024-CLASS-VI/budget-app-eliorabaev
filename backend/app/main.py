@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from middleware.validation import RequestValidationMiddleware
-from routers import balance, income, expense, suggestions
+from routers import balance, income, expense, suggestions, auth
 from core.config import settings
 from db import init_db
 import logging
@@ -32,7 +32,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add the validation middleware - IMPORTANT: add this before CORSMiddleware
+
 app.add_middleware(RequestValidationMiddleware)
 
 # Set up CORS
@@ -45,6 +45,7 @@ app.add_middleware(
 )
 
 # Register routers
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(balance.router, prefix="/balance", tags=["Balance"])
 app.include_router(income.router, prefix="/incomes", tags=["Incomes"])
 app.include_router(expense.router, prefix="/expenses", tags=["Expenses"])

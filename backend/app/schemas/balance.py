@@ -99,7 +99,6 @@ class Balance(BalanceBase):
     id: int
     
     class Config:
-        orm_mode = True
         from_attributes = True
 
 class Income(IncomeBase):
@@ -107,7 +106,6 @@ class Income(IncomeBase):
     created_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
         from_attributes = True
 
 class Expense(ExpenseBase):
@@ -115,7 +113,6 @@ class Expense(ExpenseBase):
     created_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
         from_attributes = True
 
 # Suggestion Cache Schema
@@ -128,5 +125,4 @@ class SuggestionCache(SuggestionCacheCreate):
     created_at: datetime
     
     class Config:
-        orm_mode = True
         from_attributes = True

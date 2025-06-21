@@ -1,6 +1,3 @@
--- Create the database schema for the Budget App
-
--- Use the budget_db database
 USE budget_db;
 
 CREATE TABLE IF NOT EXISTS balances (

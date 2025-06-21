@@ -6,6 +6,10 @@ from db.models import User, LoginAttempt
 from schemas.user import UserRegistration
 from core.user_validation import validate_registration_data
 from core.password_config import PasswordConfig
+from core.password_hashing import PasswordHasher
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_user_by_username(db: Session, username: str) -> User:
     """Get user by username"""
@@ -21,7 +25,7 @@ def get_user_by_id(db: Session, user_id: int) -> User:
 
 def create_user(db: Session, user_data: UserRegistration) -> User:
     """
-    Create a new user with validation
+    Create a new user with validation and password hashing
     """
     # Validate registration data
     validated_data = validate_registration_data(
@@ -41,11 +45,15 @@ def create_user(db: Session, user_data: UserRegistration) -> User:
     if existing_email:
         raise HTTPException(status_code=409, detail="Email already registered")
     
-    # Create new user (storing password as plain text for now)
+    # Hash the password with PBKDF2 and unique salt
+    hashed_password = PasswordHasher.hash_password(validated_data["password"])
+    logger.info(f"Password hashed for user {validated_data['username']}")
+    
+    # Create new user with hashed password
     db_user = User(
         username=validated_data["username"],
         email=validated_data["email"],
-        password=validated_data["password"],  # Plain text for now
+        password=hashed_password,  # Store hashed password with salt
         is_active=True,
         is_verified=False
     )
@@ -54,6 +62,7 @@ def create_user(db: Session, user_data: UserRegistration) -> User:
     db.commit()
     db.refresh(db_user)
     
+    logger.info(f"New user created: {db_user.username} (ID: {db_user.id})")
     return db_user
 
 def get_failed_login_attempts(db: Session, user_id: int, since_minutes: int = None) -> int:
@@ -98,8 +107,7 @@ def record_login_attempt(db: Session, user_id: int, ip_address: str, success: bo
 
 def authenticate_user(db: Session, username_or_email: str, password: str, ip_address: str) -> User:
     """
-    Authenticate user and handle login attempts
-    For now, this uses plain text password comparison
+    Authenticate user using PBKDF2 password verification
     """
     # Find user by username or email
     user = get_user_by_username(db, username_or_email)
@@ -108,22 +116,45 @@ def authenticate_user(db: Session, username_or_email: str, password: str, ip_add
     
     if not user:
         # Record failed attempt with a dummy user_id for security
+        logger.warning(f"Login attempt for non-existent user: {username_or_email} from IP: {ip_address}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Check if user is locked out
     if is_user_locked_out(db, user.id):
         record_login_attempt(db, user.id, ip_address, False)
+        logger.warning(f"Login attempt for locked account: {user.username} from IP: {ip_address}")
         raise HTTPException(
             status_code=429, 
             detail=f"Account locked due to too many failed attempts. Try again in {PasswordConfig.LOCKOUT_DURATION_MINUTES} minutes."
         )
     
-    # Check password (plain text comparison for now)
-    if user.password != password:
+    # Verify password using PBKDF2
+    password_valid = False
+    
+    # Check if password is already hashed (for backward compatibility during migration)
+    if PasswordHasher.is_password_hashed(user.password):
+        # Use PBKDF2 verification
+        password_valid = PasswordHasher.verify_password(password, user.password)
+        logger.debug(f"PBKDF2 password verification for user {user.username}: {'success' if password_valid else 'failed'}")
+    else:
+        # Legacy plain text comparison (should not happen in production)
+        password_valid = (user.password == password)
+        logger.warning(f"Plain text password comparison for user {user.username} - password should be migrated to PBKDF2")
+        
+        # Auto-migrate to hashed password on successful login
+        if password_valid:
+            logger.info(f"Auto-migrating password to PBKDF2 for user {user.username}")
+            user.password = PasswordHasher.hash_password(password)
+            db.commit()
+    
+    if not password_valid:
         record_login_attempt(db, user.id, ip_address, False)
         failed_attempts = get_failed_login_attempts(db, user.id)
         
+        logger.warning(f"Failed login attempt for user {user.username} from IP: {ip_address} (attempt {failed_attempts}/{PasswordConfig.MAX_LOGIN_ATTEMPTS})")
+        
         if failed_attempts >= PasswordConfig.MAX_LOGIN_ATTEMPTS:
+            logger.warning(f"Account locked for user {user.username} after {failed_attempts} failed attempts")
             raise HTTPException(
                 status_code=429,
                 detail=f"Account locked due to too many failed attempts. Try again in {PasswordConfig.LOCKOUT_DURATION_MINUTES} minutes."
@@ -138,8 +169,44 @@ def authenticate_user(db: Session, username_or_email: str, password: str, ip_add
     # Check if user is active
     if not user.is_active:
         record_login_attempt(db, user.id, ip_address, False)
+        logger.warning(f"Login attempt for deactivated account: {user.username} from IP: {ip_address}")
         raise HTTPException(status_code=401, detail="Account is deactivated")
     
     # Successful login
     record_login_attempt(db, user.id, ip_address, True)
+    logger.info(f"Successful login for user {user.username} from IP: {ip_address}")
     return user
+
+def migrate_plain_text_passwords(db: Session) -> int:
+    """
+    Migrate any existing plain text passwords to PBKDF2 hashes
+    This should be run once during deployment
+    
+    Returns:
+        Number of passwords migrated
+    """
+    migrated_count = 0
+    
+    try:
+        # Find users with plain text passwords
+        users = db.query(User).all()
+        
+        for user in users:
+            if not PasswordHasher.is_password_hashed(user.password):
+                # This is a plain text password, hash it
+                logger.info(f"Migrating plain text password for user {user.username}")
+                user.password = PasswordHasher.hash_password(user.password)
+                migrated_count += 1
+        
+        if migrated_count > 0:
+            db.commit()
+            logger.info(f"Successfully migrated {migrated_count} plain text passwords to PBKDF2")
+        else:
+            logger.info("No plain text passwords found to migrate")
+            
+    except Exception as e:
+        logger.error(f"Error during password migration: {str(e)}")
+        db.rollback()
+        raise
+    
+    return migrated_count

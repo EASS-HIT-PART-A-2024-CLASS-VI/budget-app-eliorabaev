@@ -1,2 +1,2 @@
-# Import schema modules for easy access
 from .balance import *
+from .user import *

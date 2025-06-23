@@ -1,11 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from datetime import timedelta
 from typing import Dict
 
 import crud
 from db.database import get_db
 from schemas.user import UserRegistration, UserResponse, UserLogin
 from core.password_config import PasswordConfig
+from core.auth_jwt import create_access_token, Token, ACCESS_TOKEN_EXPIRE_MINUTES
+from core.auth_dependencies import get_current_user
+from db.models import User
 
 router = APIRouter()
 
@@ -44,14 +49,53 @@ async def register_user(
         # Handle unexpected errors
         raise HTTPException(status_code=500, detail="Registration failed")
 
-@router.post("/login")
+@router.post("/login", response_model=Token)
 async def login_user(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    """
+    Authenticate user login and return JWT token
+    """
+    try:
+        client_ip = get_client_ip(request)
+        
+        # Authenticate user
+        user = crud.user.authenticate_user(
+            db, 
+            form_data.username,  # OAuth2PasswordRequestForm uses 'username' field
+            form_data.password,
+            client_ip
+        )
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.username}, 
+            expires_delta=access_token_expires
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+    
+    except HTTPException:
+        # Re-raise HTTPException from authentication
+        raise
+    except Exception as e:
+        # Handle unexpected errors
+        raise HTTPException(status_code=500, detail="Login failed")
+
+@router.post("/login-json")
+async def login_user_json(
     login_data: UserLogin,
     request: Request,
     db: Session = Depends(get_db)
 ):
     """
-    Authenticate user login with rate limiting
+    Alternative login endpoint that accepts JSON data instead of form data
     """
     try:
         client_ip = get_client_ip(request)
@@ -64,9 +108,16 @@ async def login_user(
             client_ip
         )
         
-        # In a real application, you would generate a JWT token here
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.username}, 
+            expires_delta=access_token_expires
+        )
+        
         return {
-            "message": "Login successful",
+            "access_token": access_token,
+            "token_type": "bearer",
             "user": {
                 "id": user.id,
                 "username": user.username,
@@ -80,6 +131,15 @@ async def login_user(
     except Exception as e:
         # Handle unexpected errors
         raise HTTPException(status_code=500, detail="Login failed")
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get current user information from JWT token
+    """
+    return current_user
 
 @router.get("/password-requirements")
 async def get_password_requirements():

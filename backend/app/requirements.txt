@@ -11,3 +11,5 @@ mysql-connector-python
 pymysql
 alembic
 cryptography
+PyJWT>=2.8.0
+python-multipart

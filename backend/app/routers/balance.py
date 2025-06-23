@@ -6,42 +6,65 @@ import crud
 from db.database import get_db
 from schemas.balance import Balance, BalanceCreate, BalanceUpdate
 from dependencies import validate_balance_id, validate_pagination
+from core.auth_dependencies import get_current_user
+from db.models import User
 import httpx
 
 router = APIRouter()
 
-GRAPH_MICROSERVICE_URL = "http://graph_microservice:8002"  # Keep existing URL
+GRAPH_MICROSERVICE_URL = "http://graph_microservice:8002"
 
 @router.post("/", response_model=Balance)
-async def create_balance_endpoint(balance: BalanceCreate, db: Session = Depends(get_db)):
+async def create_balance_endpoint(
+    balance: BalanceCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # JWT Protection
+):
+    """Create a new balance for the authenticated user"""
     return crud.balance.create_balance(db, balance)
 
 @router.get("/{balance_id}", response_model=Balance)
 async def get_balance_endpoint(
     balance_id: int = Depends(validate_balance_id), 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # JWT Protection
 ):
+    """Get a balance by ID (user must be authenticated)"""
     db_balance = crud.balance.get_balance(db, balance_id)
     if db_balance is None:
         raise HTTPException(status_code=404, detail="Balance not found")
+    
+    # Optional: Add user ownership check
+    # if db_balance.user_id and db_balance.user_id != current_user.id:
+    #     raise HTTPException(status_code=403, detail="Access denied")
+    
     return db_balance
 
 @router.patch("/{balance_id}", response_model=Balance)
 async def update_balance_endpoint(
     balance_id: int = Depends(validate_balance_id), 
     balance: BalanceUpdate = None, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # JWT Protection
 ):
+    """Update a balance (user must be authenticated)"""
     db_balance = crud.balance.update_balance(db, balance_id, balance)
     if db_balance is None:
         raise HTTPException(status_code=404, detail="Balance not found")
+    
+    # Optional: Add user ownership check
+    # if db_balance.user_id and db_balance.user_id != current_user.id:
+    #     raise HTTPException(status_code=403, detail="Access denied")
+    
     return db_balance
 
 @router.delete("/{balance_id}", status_code=204)
 async def delete_balance_endpoint(
     balance_id: int = Depends(validate_balance_id), 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # JWT Protection
 ):
+    """Delete a balance (user must be authenticated)"""
     success = crud.balance.delete_balance(db, balance_id)
     if not success:
         raise HTTPException(status_code=404, detail="Balance not found")
@@ -50,25 +73,46 @@ async def delete_balance_endpoint(
 @router.get("/{balance_id}/graph")
 async def get_balance_graph(
     balance_id: int = Depends(validate_balance_id), 
-    db: Session = Depends(get_db)
+    request: Request,  # Add request to get authorization header
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # JWT Protection
 ):
     """
     Fetch balance graph data and projected revenue from the graph_microservice.
+    (user must be authenticated)
     """
     # First verify that the balance exists
     db_balance = crud.balance.get_balance(db, balance_id)
     if db_balance is None:
         raise HTTPException(status_code=404, detail="Balance not found")
     
+    if db_balance.user_id and db_balance.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Extract the Authorization header to forward to graph microservice
+    auth_header = request.headers.get("authorization")
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    
+    # Prepare headers to forward to graph microservice
+    headers = {"Authorization": auth_header}
+    
     async with httpx.AsyncClient() as client:
         try:
-            balance_response = await client.get(f"{GRAPH_MICROSERVICE_URL}/balance-graph/{balance_id}")
+            # Forward JWT token to graph microservice
+            balance_response = await client.get(
+                f"{GRAPH_MICROSERVICE_URL}/balance-graph/{balance_id}",
+                headers=headers
+            )
             if balance_response.status_code == 404:
                 raise HTTPException(status_code=404, detail="Graph data not found for this balance ID")
             balance_response.raise_for_status()
             balance_graph = balance_response.json()
 
-            revenue_response = await client.get(f"{GRAPH_MICROSERVICE_URL}/projected-revenue/{balance_id}")
+            revenue_response = await client.get(
+                f"{GRAPH_MICROSERVICE_URL}/projected-revenue/{balance_id}",
+                headers=headers
+            )
             if revenue_response.status_code == 404:
                 raise HTTPException(status_code=404, detail="Projected revenue not found for this balance ID")
             revenue_response.raise_for_status()
@@ -86,3 +130,9 @@ async def get_balance_graph(
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
+# Optional: Public endpoint that doesn't require authentication
+@router.get("/public/health")
+async def health_check():
+    """Public health check endpoint (no authentication required)"""
+    return {"status": "healthy", "service": "balance"}

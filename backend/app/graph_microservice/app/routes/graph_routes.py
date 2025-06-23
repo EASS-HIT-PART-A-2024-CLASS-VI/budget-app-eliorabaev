@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Path, Query
+# backend/app/graph_microservice/app/routes/graph_routes.py
+from fastapi import APIRouter, HTTPException, Path, Query, Request
 import httpx
 from datetime import datetime
 from app.models.graph_models import BalanceGraphData, ProjectedRevenueData
@@ -12,11 +13,22 @@ BACKEND_URL = "http://backend:8000"
 async def get_balance_graph(
     balance_id: int = Path(..., description="The ID of the balance"),
     year: int = Query(default=None, description="Year to calculate the balance graph"),
+    request: Request = None,  # Add request to access headers
 ):
     """Fetch data for the given balance ID and compute the balance graph incrementally per month."""
+    
+    # Extract Authorization header to forward to backend
+    headers = {}
+    if request and "authorization" in request.headers:
+        headers["Authorization"] = request.headers["authorization"]
+    
     try:
         async with httpx.AsyncClient() as client:
-            balance_response = await client.get(f"{BACKEND_URL}/balance/{balance_id}")
+            # Forward JWT token when calling backend
+            balance_response = await client.get(
+                f"{BACKEND_URL}/balance/{balance_id}",
+                headers=headers
+            )
 
             if balance_response.status_code == 404:
                 raise HTTPException(status_code=404, detail="Balance not found")
@@ -29,8 +41,16 @@ async def get_balance_graph(
             balance = balance_response.json()
 
             # Fetch incomes and expenses only if the balance exists
-            income_response = await client.get(f"{BACKEND_URL}/incomes/", params={"balance_id": balance_id})
-            expense_response = await client.get(f"{BACKEND_URL}/expenses/", params={"balance_id": balance_id})
+            income_response = await client.get(
+                f"{BACKEND_URL}/incomes/", 
+                params={"balance_id": balance_id},
+                headers=headers
+            )
+            expense_response = await client.get(
+                f"{BACKEND_URL}/expenses/", 
+                params={"balance_id": balance_id},
+                headers=headers
+            )
 
             if income_response.status_code == 404 and expense_response.status_code == 404:
                 raise HTTPException(status_code=404, detail="Income and Expense data not found")
@@ -72,11 +92,22 @@ async def get_balance_graph(
 async def get_projected_revenue(
     balance_id: int = Path(..., description="The ID of the balance"),
     year: int = Query(default=None, description="Year to calculate the projected revenue"),
+    request: Request = None,  # Add request to access headers
 ):
     """Fetch data for the given balance ID and compute the projected revenue with yearly compounding."""
+    
+    # Extract Authorization header to forward to backend
+    headers = {}
+    if request and "authorization" in request.headers:
+        headers["Authorization"] = request.headers["authorization"]
+    
     try:
         async with httpx.AsyncClient() as client:
-            balance_response = await client.get(f"{BACKEND_URL}/balance/{balance_id}")
+            # Forward JWT token when calling backend
+            balance_response = await client.get(
+                f"{BACKEND_URL}/balance/{balance_id}",
+                headers=headers
+            )
 
             if balance_response.status_code == 404:
                 raise HTTPException(status_code=404, detail="Balance not found")
@@ -89,8 +120,16 @@ async def get_projected_revenue(
             balance = balance_response.json()
 
             # Fetch incomes and expenses only if the balance exists
-            income_response = await client.get(f"{BACKEND_URL}/incomes/", params={"balance_id": balance_id})
-            expense_response = await client.get(f"{BACKEND_URL}/expenses/", params={"balance_id": balance_id})
+            income_response = await client.get(
+                f"{BACKEND_URL}/incomes/", 
+                params={"balance_id": balance_id},
+                headers=headers
+            )
+            expense_response = await client.get(
+                f"{BACKEND_URL}/expenses/", 
+                params={"balance_id": balance_id},
+                headers=headers
+            )
 
             if income_response.status_code == 404 and expense_response.status_code == 404:
                 raise HTTPException(status_code=404, detail="Income and Expense data not found")

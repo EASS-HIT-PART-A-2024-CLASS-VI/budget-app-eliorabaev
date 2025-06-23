@@ -7,16 +7,28 @@ services:
       - "8000"
     environment:
       - PYTHONUNBUFFERED=1
+      # Database Configuration
       - DB_HOST=mysql
       - DB_USER=budget_user
       - DB_PASSWORD=budget_password
       - DB_NAME=budget_db
+      # JWT Configuration (NEW)
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-change-this-in-production}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      # App Configuration
+      - APP_NAME=${APP_NAME:-Budget App}
+      - VERSION=${VERSION:-1.0.0}
+      - DEBUG=${DEBUG:-true}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
     command: sh -c "sleep 10 && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     depends_on:
       mysql:
         condition: service_healthy
     volumes:
       - ./backend/app/llm_microservice/.env:/app/llm_microservice/.env
+      # Optional: Mount .env file for easier development
+      - ./backend/app/.env:/app/.env
   
   frontend:
     build:

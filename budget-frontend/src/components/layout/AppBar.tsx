@@ -1,3 +1,4 @@
+// src/components/layout/AppBar.tsx
 import React from 'react';
 import {
   AppBar,
@@ -6,20 +7,43 @@ import {
   Button,
   Box,
   Stack,
-  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from '@mui/material';
-import { Home, Dashboard, Settings } from '@mui/icons-material';
+import { 
+  Home, 
+  Dashboard, 
+  Settings, 
+  AccountCircle,
+  Logout,
+  Person
+} from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
-import Cookies from 'js-cookie';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 export const GlobalAppBar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isAuthenticated = !!Cookies.get('access_token');
+  const { user, isAuthenticated, logout } = useAuthContext();
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   const handleLogout = () => {
-    Cookies.remove('access_token');
+    logout();
+    handleUserMenuClose();
+    // Navigate to home page after logout
     navigate('/');
   };
 
@@ -112,15 +136,78 @@ export const GlobalAppBar: React.FC = () => {
         <Stack direction="row" spacing={1} alignItems="center">
           <ThemeToggle />
           
-          {isAuthenticated ? (
-            // Authenticated Actions
-            <Button 
-              variant="outlined" 
-              onClick={handleLogout}
-              size="small"
-            >
-              Logout
-            </Button>
+          {isAuthenticated && user ? (
+            // Authenticated User Menu
+            <>
+              <Button
+                color="inherit"
+                onClick={handleUserMenuOpen}
+                startIcon={
+                  <Avatar sx={{ width: 32, height: 32 }}>
+                    {user.username.charAt(0).toUpperCase()}
+                  </Avatar>
+                }
+                sx={{ 
+                  color: 'text.primary',
+                  textTransform: 'none',
+                  borderRadius: 2
+                }}
+              >
+                {user.username}
+              </Button>
+              
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleUserMenuClose}
+                onClick={handleUserMenuClose}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                slotProps={{
+                  paper: {
+                    sx: {
+                      mt: 1,
+                      minWidth: 200,
+                    },
+                  },
+                }}
+              >
+                <MenuItem disabled>
+                  <ListItemIcon>
+                    <Person fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={user.username}
+                    secondary={user.email}
+                  />
+                </MenuItem>
+                
+                <Divider />
+                
+                <MenuItem onClick={() => navigate('/dashboard')}>
+                  <ListItemIcon>
+                    <Dashboard fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Dashboard" />
+                </MenuItem>
+                
+                <MenuItem onClick={() => navigate('/settings')}>
+                  <ListItemIcon>
+                    <Settings fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Settings" />
+                </MenuItem>
+                
+                <Divider />
+                
+                <MenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <Logout fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Logout" />
+                </MenuItem>
+              </Menu>
+            </>
           ) : (
             // Public Actions
             <>

@@ -209,7 +209,7 @@ export const GlobalAppBar: React.FC = () => {
               </Menu>
             </>
           ) : (
-            // Public Actions
+            // Public Actionss
             <>
               <Button 
                 color="inherit" 

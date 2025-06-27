@@ -1,3 +1,4 @@
+// frontend/src/utils/constants.ts (Fixed Version)
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/auth/login-json',
@@ -6,22 +7,24 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
   },
   BALANCE: {
-    CREATE: '/balance',
+    CREATE: '/balance/', 
+    LIST: '/balance/',
+    CURRENT: '/balance/current',
     GET: (id: number) => `/balance/${id}`,
     UPDATE: (id: number) => `/balance/${id}`,
     DELETE: (id: number) => `/balance/${id}`,
     GRAPH: (id: number) => `/balance/${id}/graph`,
   },
   INCOME: {
-    CREATE: '/incomes',
-    LIST: '/incomes',
+    CREATE: '/incomes/',
+    LIST: '/incomes/',
     GET: (id: number) => `/incomes/${id}`,
     UPDATE: (id: number) => `/incomes/${id}`,
     DELETE: (id: number) => `/incomes/${id}`,
   },
   EXPENSE: {
-    CREATE: '/expenses',
-    LIST: '/expenses',
+    CREATE: '/expenses/',
+    LIST: '/expenses/',
     GET: (id: number) => `/expenses/${id}`,
     UPDATE: (id: number) => `/expenses/${id}`,
     DELETE: (id: number) => `/expenses/${id}`,
@@ -32,7 +35,7 @@ export const API_ENDPOINTS = {
   },
 } as const;
 
-// Query Keys for TanStack Query
+// Rest of the constants remain the same
 export const QUERY_KEYS = {
   AUTH: {
     CURRENT_USER: ['currentUser'],
@@ -56,7 +59,6 @@ export const QUERY_KEYS = {
   },
 } as const;
 
-// App Configuration
 export const APP_CONFIG = {
   NAME: 'Budget App',
   VERSION: '1.0.0',
@@ -64,7 +66,6 @@ export const APP_CONFIG = {
   TOKEN_STORAGE_KEY: 'access_token',
 } as const;
 
-// Form Validation
 export const VALIDATION = {
   PASSWORD_MIN_LENGTH: 8,
   USERNAME_MIN_LENGTH: 3,
@@ -72,7 +73,6 @@ export const VALIDATION = {
   EMAIL_MAX_LENGTH: 255,
 } as const;
 
-// UI Constants
 export const UI = {
   DRAWER_WIDTH: 240,
   HEADER_HEIGHT: 64,

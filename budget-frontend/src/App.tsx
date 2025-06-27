@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -5,6 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Box } from '@mui/material';
 import { queryClient } from './stores/queryClient';
 import { ThemeProviderWrapper } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Import pages
 import { Homepage } from './pages/Homepage';
@@ -24,42 +26,44 @@ function AppContent() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            {/* Global AppBar */}
-            <GlobalAppBar />
-            
-            {/* Main Content */}
-            <Box component="main" sx={{ flexGrow: 1 }}>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<Homepage />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                
-                {/* Protected routes */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <DashboardLayout>
-                        <Dashboard />
-                      </DashboardLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <ProtectedRoute>
-                      <DashboardLayout>
-                        <Settings />
-                      </DashboardLayout>
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
+          <AuthProvider>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              {/* Global AppBar */}
+              <GlobalAppBar />
+              
+              {/* Main Content */}
+              <Box component="main" sx={{ flexGrow: 1 }}>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<Homepage />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  
+                  {/* Protected routes */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <DashboardLayout>
+                          <Dashboard />
+                        </DashboardLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute>
+                        <DashboardLayout>
+                          <Settings />
+                        </DashboardLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </Box>
             </Box>
-          </Box>
+          </AuthProvider>
         </Router>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

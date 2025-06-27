@@ -49,5 +49,17 @@ export const balanceService = {
       }
       throw error; // Re-throw other errors
     }
-  }
+  },
+
+  // Get current user's balance
+  async getCurrentUserBalance(): Promise<Balance> {
+    const response = await apiClient.get<Balance>('/balance/current');
+    return response.data;
+  },
+
+  // Get all user's balances
+  async getUserBalances(): Promise<Balance[]> {
+    const response = await apiClient.get<Balance[]>('/balance');
+    return response.data;
+  },
 };

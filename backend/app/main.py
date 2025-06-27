@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    redirect_slashes=True,
+    redirect_slashes=False,
     title=settings.app_name,
     version=settings.version,
     debug=settings.debug,

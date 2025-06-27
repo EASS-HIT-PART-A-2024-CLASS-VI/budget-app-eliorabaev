@@ -1,5 +1,5 @@
-// src/pages/Dashboard.tsx (Updated with Real Data Integration)
-import React, { useState } from 'react';
+// src/pages/Dashboard.tsx (Complete Updated Version)
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, 
   Card, 
@@ -9,9 +9,6 @@ import {
   Stack,
   Button,
   Fab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
   Skeleton,
   Chip,
   LinearProgress,
@@ -35,13 +32,15 @@ import { IncomeForm } from '../components/forms/IncomeForm';
 import { ExpenseForm } from '../components/forms/ExpenseForm';
 import { FormDialog } from '../components/forms/FormDialog';
 import { formatCurrency, formatRelativeTime } from '../utils/formatters';
+import { apiClient } from '../services/api';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuthContext();
   
-  // For this demo, we'll assume the user has one balance with ID 1
-  // In a real app, you'd fetch the user's balances first
-  const DEMO_BALANCE_ID = 1;
+  // State for the user's primary balance ID
+  const [userBalanceId, setUserBalanceId] = useState<number | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
   
   // State for dialogs
   const [dialogs, setDialogs] = useState({
@@ -50,20 +49,75 @@ export const Dashboard: React.FC = () => {
     expense: false,
   });
   
-  // Hooks for data operations
+  // Try to get the user's balance first
+  useEffect(() => {
+    const findUserBalance = async () => {
+      if (!user) return;
+      
+      try {
+        setIsInitializing(true);
+        setInitializationError(null);
+        
+        // Try to get user's current balance
+        // First, try the hardcoded ID 1 (for backward compatibility)
+        try {
+          const response = await apiClient.get('/balance/1');
+          if (response.data) {
+            setUserBalanceId(1);
+            return;
+          }
+        } catch (error: any) {
+          // If 404, that's fine - user might not have balance ID 1
+          if (error.response?.status !== 404) {
+            throw error; // Re-throw other errors
+          }
+        }
+        
+        // If that doesn't work, try to find any balance for the user
+        // This would require a backend endpoint, but for now we'll try a few IDs
+        for (let i = 1; i <= 10; i++) {
+          try {
+            const response = await apiClient.get(`/balance/${i}`);
+            if (response.data) {
+              setUserBalanceId(i);
+              return;
+            }
+          } catch (error: any) {
+            // Continue trying other IDs
+            if (error.response?.status !== 404) {
+              console.warn(`Error checking balance ${i}:`, error);
+            }
+          }
+        }
+        
+        // No balance found
+        setUserBalanceId(null);
+        
+      } catch (error: any) {
+        console.error('Error finding user balance:', error);
+        setInitializationError('Failed to load balance data');
+        setUserBalanceId(null);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    findUserBalance();
+  }, [user]);
+
+  // Hooks for data operations - only active when we have a balance ID
   const {
     balance,
     isLoading: balanceLoading,
     error: balanceError,
-    createBalance,
-  } = useBalanceOperations(DEMO_BALANCE_ID);
+  } = useBalanceOperations(userBalanceId || 0);
   
   const {
     incomes,
     stats: incomeStats,
     totalIncome,
     isLoading: incomeLoading,
-  } = useIncomeOperations(balance ? DEMO_BALANCE_ID : undefined);
+  } = useIncomeOperations(userBalanceId || undefined);
   
   const {
     expenses,
@@ -71,7 +125,7 @@ export const Dashboard: React.FC = () => {
     totalExpenses,
     topCategories,
     isLoading: expenseLoading,
-  } = useExpenseOperations(balance ? DEMO_BALANCE_ID : undefined);
+  } = useExpenseOperations(userBalanceId || undefined);
   
   const {
     suggestions,
@@ -80,7 +134,7 @@ export const Dashboard: React.FC = () => {
     refreshSuggestions,
     hasData: hasSuggestions,
     cashFlowStatus,
-  } = useSuggestionsOperations(balance ? DEMO_BALANCE_ID : undefined);
+  } = useSuggestionsOperations(userBalanceId || undefined);
 
   // Handle dialog toggles
   const toggleDialog = (type: keyof typeof dialogs) => {
@@ -93,20 +147,83 @@ export const Dashboard: React.FC = () => {
   const cashFlowIcon = netCashFlow >= 0 ? <TrendingUp /> : <TrendingDown />;
 
   // Handle initial balance creation
-  const handleBalanceCreated = () => {
+  const handleBalanceCreated = (newBalance: any) => {
+    setUserBalanceId(newBalance.id);
+    toggleDialog('balance');
+  };
+
+  // Handle balance update
+  const handleBalanceUpdated = () => {
     toggleDialog('balance');
     // The balance will automatically refresh due to React Query
   };
 
-  // Loading state for initial data
-  const isInitialLoading = balanceLoading && !balance;
+  // Check if we should show the balance creation form
+  const shouldShowBalanceCreation = () => {
+    // Show if we're not initializing and no balance was found
+    if (isInitializing) return false;
+    
+    // Show if we explicitly don't have a balance ID
+    if (!userBalanceId) return true;
+    
+    // Show if there's a 404 error (balance doesn't exist)
+    if (balanceError && (balanceError as any)?.response?.status === 404) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Show loading while initializing
+  if (isInitializing) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <Stack spacing={2} alignItems="center">
+          <Skeleton variant="rectangular" width={300} height={200} sx={{ borderRadius: 2 }} />
+          <Typography variant="body2" color="text.secondary">
+            Loading your financial data...
+          </Typography>
+        </Stack>
+      </Box>
+    );
+  }
+
+  // Show initialization error
+  if (initializationError) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <Card sx={{ maxWidth: 500, width: '100%' }}>
+          <CardContent sx={{ p: 4, textAlign: 'center' }}>
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {initializationError}
+            </Alert>
+            <Button 
+              variant="contained" 
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
 
   // Show balance creation form if no balance exists
-  if (!balance && !balanceLoading && !balanceError) {
+  if (shouldShowBalanceCreation()) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
         <Card sx={{ maxWidth: 500, width: '100%' }}>
           <CardContent sx={{ p: 4 }}>
+            <Stack spacing={2} textAlign="center" mb={3}>
+              <AccountBalance sx={{ fontSize: 48, color: 'primary.main', mx: 'auto' }} />
+              <Typography variant="h5" component="h1" gutterBottom>
+                Welcome to Budget App! 🎉
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Let's get started by setting up your initial balance
+              </Typography>
+            </Stack>
             <BalanceForm 
               onSuccess={handleBalanceCreated}
               submitButtonText="Get Started"
@@ -130,7 +247,7 @@ export const Dashboard: React.FC = () => {
       </Box>
 
       {/* Error States */}
-      {balanceError && (
+      {balanceError && (balanceError as any)?.response?.status !== 404 && (
         <Alert severity="error" sx={{ mb: 3 }}>
           Failed to load balance data. Please try refreshing the page.
         </Alert>
@@ -155,7 +272,7 @@ export const Dashboard: React.FC = () => {
                 <Typography color="textSecondary" gutterBottom>
                   Current Balance
                 </Typography>
-                {isInitialLoading ? (
+                {balanceLoading ? (
                   <Skeleton variant="text" width={100} height={40} />
                 ) : (
                   <Typography variant="h5" component="div">
@@ -301,7 +418,7 @@ export const Dashboard: React.FC = () => {
                 variant="outlined" 
                 size="small"
                 onClick={refreshSuggestions}
-                disabled={suggestionsLoading}
+                disabled={suggestionsLoading || !userBalanceId}
               >
                 Refresh
               </Button>
@@ -352,6 +469,13 @@ export const Dashboard: React.FC = () => {
                 <Typography color="textSecondary" textAlign="center">
                   Add income and expenses to get AI insights
                 </Typography>
+                <Button 
+                  variant="outlined" 
+                  size="small"
+                  onClick={() => toggleDialog('income')}
+                >
+                  Add Your First Income
+                </Button>
               </Box>
             )}
           </CardContent>
@@ -369,7 +493,7 @@ export const Dashboard: React.FC = () => {
               variant="outlined"
               startIcon={<TrendingUp />}
               onClick={() => toggleDialog('income')}
-              disabled={!balance}
+              disabled={!userBalanceId}
             >
               Add Income
             </Button>
@@ -377,7 +501,7 @@ export const Dashboard: React.FC = () => {
               variant="outlined"
               startIcon={<TrendingDown />}
               onClick={() => toggleDialog('expense')}
-              disabled={!balance}
+              disabled={!userBalanceId}
             >
               Add Expense
             </Button>
@@ -389,20 +513,85 @@ export const Dashboard: React.FC = () => {
               Update Balance
             </Button>
           </Stack>
+          
+          {/* Helper text for new users */}
+          {totalIncome === 0 && totalExpenses === 0 && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                💡 <strong>Getting Started:</strong> Add your income sources and track expenses to get personalized AI insights about your finances.
+              </Typography>
+            </Alert>
+          )}
         </CardContent>
       </Card>
+
+      {/* Recent Activity Preview (if there's data) */}
+      {(incomes.length > 0 || expenses.length > 0) && (
+        <Card sx={{ mt: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Recent Activity
+            </Typography>
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+              gap: 2 
+            }}>
+              {/* Recent Income */}
+              <Box>
+                <Typography variant="subtitle2" color="success.main" gutterBottom>
+                  Recent Income
+                </Typography>
+                {incomes.slice(0, 3).map((income, index) => (
+                  <Box key={income.id} display="flex" justifyContent="space-between" py={0.5}>
+                    <Typography variant="body2">{income.source}</Typography>
+                    <Typography variant="body2" color="success.main">
+                      +{formatCurrency(income.amount)}
+                    </Typography>
+                  </Box>
+                ))}
+                {incomes.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    No income recorded yet
+                  </Typography>
+                )}
+              </Box>
+              
+              {/* Recent Expenses */}
+              <Box>
+                <Typography variant="subtitle2" color="error.main" gutterBottom>
+                  Recent Expenses
+                </Typography>
+                {expenses.slice(0, 3).map((expense, index) => (
+                  <Box key={expense.id} display="flex" justifyContent="space-between" py={0.5}>
+                    <Typography variant="body2">{expense.category}</Typography>
+                    <Typography variant="body2" color="error.main">
+                      -{formatCurrency(expense.amount)}
+                    </Typography>
+                  </Box>
+                ))}
+                {expenses.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    No expenses recorded yet
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Floating Action Button */}
       <Fab
         color="primary"
-        aria-label="add"
+        aria-label="add expense"
         sx={{
           position: 'fixed',
           bottom: 16,
           right: 16,
         }}
         onClick={() => toggleDialog('expense')}
-        disabled={!balance}
+        disabled={!userBalanceId}
       >
         <Add />
       </Fab>
@@ -416,7 +605,7 @@ export const Dashboard: React.FC = () => {
       >
         <BalanceForm
           balance={balance}
-          onSuccess={() => toggleDialog('balance')}
+          onSuccess={handleBalanceUpdated}
           onCancel={() => toggleDialog('balance')}
         />
       </FormDialog>
@@ -428,7 +617,7 @@ export const Dashboard: React.FC = () => {
         subtitle="Track your income sources"
       >
         <IncomeForm
-          balanceId={DEMO_BALANCE_ID}
+          balanceId={userBalanceId!}
           onSuccess={() => toggleDialog('income')}
           onCancel={() => toggleDialog('income')}
         />
@@ -441,7 +630,7 @@ export const Dashboard: React.FC = () => {
         subtitle="Track your spending"
       >
         <ExpenseForm
-          balanceId={DEMO_BALANCE_ID}
+          balanceId={userBalanceId!}
           onSuccess={() => toggleDialog('expense')}
           onCancel={() => toggleDialog('expense')}
         />

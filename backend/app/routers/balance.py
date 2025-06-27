@@ -19,14 +19,39 @@ async def health_check():
     """Public health check endpoint (no authentication required)"""
     return {"status": "healthy", "service": "balance"}
 
+@router.get("/", response_model=List[Balance])
+async def get_user_balances(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all balances for the current user"""
+    balances = db.query(Balance).filter(Balance.user_id == current_user.id).all()
+    return balances
+
+@router.get("/current", response_model=Balance)
+async def get_current_user_balance(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get the user's primary/first balance"""
+    balance = db.query(Balance).filter(Balance.user_id == current_user.id).first()
+    if not balance:
+        raise HTTPException(status_code=404, detail="No balance found. Please create one first.")
+    return balance
+
 @router.post("/", response_model=Balance)
 async def create_balance_endpoint(
     balance: BalanceCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # JWT Protection
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new balance for the authenticated user"""
-    return crud.balance.create_balance(db, balance)
+    # Create balance with user association
+    db_balance = Balance(amount=balance.amount, user_id=current_user.id)
+    db.add(db_balance)
+    db.commit()
+    db.refresh(db_balance)
+    return db_balance
 
 @router.get("/{balance_id}", response_model=Balance)
 async def get_balance_endpoint(
@@ -136,4 +161,3 @@ async def get_balance_graph(
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
-# Optional: Public endpoint that doesn't require authentication

@@ -172,3 +172,18 @@ export const useBalanceOperations = (balanceId: number) => {
     }
   };
 };
+
+export const useGetCurrentUserBalance = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['currentUserBalance'],
+    queryFn: () => balanceService.getCurrentUserBalance(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: (failureCount, error: any) => {
+      // Don't retry 404 errors (user has no balance)
+      if (error?.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};

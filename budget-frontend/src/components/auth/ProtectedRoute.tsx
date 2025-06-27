@@ -1,22 +1,47 @@
+// src/components/auth/ProtectedRoute.tsx
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { Box, CircularProgress } from '@mui/material';
-import Cookies from 'js-cookie';
+import { Navigate, useLocation } from 'react-router-dom';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  // Simple token check for now - we'll enhance this with proper auth hook later
-  const token = Cookies.get('access_token');
-  const isAuthenticated = !!token;
+  const { user, isAuthenticated, isLoading } = useAuthContext();
+  const location = useLocation();
 
-  // For now, just check if token exists
-  // In a real app, you'd validate the token and check expiration
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        minHeight="50vh"
+        gap={2}
+      >
+        <CircularProgress size={40} />
+        <Typography variant="body2" color="text.secondary">
+          Checking authentication...
+        </Typography>
+      </Box>
+    );
   }
 
+  // If not authenticated, redirect to login with return url
+  if (!isAuthenticated || !user) {
+    return (
+      <Navigate 
+        to="/login" 
+        state={{ from: location.pathname }} 
+        replace 
+      />
+    );
+  }
+
+  // If authenticated, render the protected content
   return <>{children}</>;
 };

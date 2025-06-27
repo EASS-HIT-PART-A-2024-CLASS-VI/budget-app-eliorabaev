@@ -1,23 +1,121 @@
-// src/pages/Dashboard.tsx
-import React from 'react';
+// src/pages/Dashboard.tsx (Updated with Real Data Integration)
+import React, { useState } from 'react';
 import { 
   Typography, 
   Card, 
   CardContent, 
   Box,
   Alert,
-  Stack
+  Stack,
+  Button,
+  Fab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Skeleton,
+  Chip,
+  LinearProgress,
 } from '@mui/material';
 import { 
   AccountBalance,
   TrendingUp,
   TrendingDown,
-  Psychology 
+  Psychology,
+  Add,
+  Refresh,
+  Timeline,
 } from '@mui/icons-material';
 import { useAuthContext } from '../contexts/AuthContext';
+import { useBalanceOperations } from '../hooks/useBalance';
+import { useIncomeOperations } from '../hooks/useIncomes';
+import { useExpenseOperations } from '../hooks/useExpenses';
+import { useSuggestionsOperations } from '../hooks/useSuggestions';
+import { BalanceForm } from '../components/forms/BalanceForm';
+import { IncomeForm } from '../components/forms/IncomeForm';
+import { ExpenseForm } from '../components/forms/ExpenseForm';
+import { FormDialog } from '../components/forms/FormDialog';
+import { formatCurrency, formatRelativeTime } from '../utils/formatters';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuthContext();
+  
+  // For this demo, we'll assume the user has one balance with ID 1
+  // In a real app, you'd fetch the user's balances first
+  const DEMO_BALANCE_ID = 1;
+  
+  // State for dialogs
+  const [dialogs, setDialogs] = useState({
+    balance: false,
+    income: false,
+    expense: false,
+  });
+  
+  // Hooks for data operations
+  const {
+    balance,
+    isLoading: balanceLoading,
+    error: balanceError,
+    createBalance,
+  } = useBalanceOperations(DEMO_BALANCE_ID);
+  
+  const {
+    incomes,
+    stats: incomeStats,
+    totalIncome,
+    isLoading: incomeLoading,
+  } = useIncomeOperations(balance ? DEMO_BALANCE_ID : undefined);
+  
+  const {
+    expenses,
+    stats: expenseStats,
+    totalExpenses,
+    topCategories,
+    isLoading: expenseLoading,
+  } = useExpenseOperations(balance ? DEMO_BALANCE_ID : undefined);
+  
+  const {
+    suggestions,
+    summary: suggestionsSummary,
+    isLoading: suggestionsLoading,
+    refreshSuggestions,
+    hasData: hasSuggestions,
+    cashFlowStatus,
+  } = useSuggestionsOperations(balance ? DEMO_BALANCE_ID : undefined);
+
+  // Handle dialog toggles
+  const toggleDialog = (type: keyof typeof dialogs) => {
+    setDialogs(prev => ({ ...prev, [type]: !prev[type] }));
+  };
+
+  // Calculate net cash flow
+  const netCashFlow = totalIncome - totalExpenses;
+  const cashFlowColor = netCashFlow >= 0 ? 'success.main' : 'error.main';
+  const cashFlowIcon = netCashFlow >= 0 ? <TrendingUp /> : <TrendingDown />;
+
+  // Handle initial balance creation
+  const handleBalanceCreated = () => {
+    toggleDialog('balance');
+    // The balance will automatically refresh due to React Query
+  };
+
+  // Loading state for initial data
+  const isInitialLoading = balanceLoading && !balance;
+
+  // Show balance creation form if no balance exists
+  if (!balance && !balanceLoading && !balanceError) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <Card sx={{ maxWidth: 500, width: '100%' }}>
+          <CardContent sx={{ p: 4 }}>
+            <BalanceForm 
+              onSuccess={handleBalanceCreated}
+              submitButtonText="Get Started"
+            />
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -27,19 +125,18 @@ export const Dashboard: React.FC = () => {
           Welcome back, {user?.username}! 👋
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Here's an overview of your financial status
+          Here's your financial overview
         </Typography>
       </Box>
 
-      {/* Demo Notice */}
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2">
-          <strong>Demo Mode:</strong> The data shown below is mock data. 
-          In the next phase, we'll connect this to your real financial data from the backend API.
-        </Typography>
-      </Alert>
+      {/* Error States */}
+      {balanceError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Failed to load balance data. Please try refreshing the page.
+        </Alert>
+      )}
       
-      {/* Financial Overview Cards using CSS Grid */}
+      {/* Financial Overview Cards */}
       <Box sx={{ 
         display: 'grid', 
         gridTemplateColumns: { 
@@ -50,6 +147,7 @@ export const Dashboard: React.FC = () => {
         gap: 3, 
         mb: 3 
       }}>
+        {/* Current Balance Card */}
         <Card>
           <CardContent>
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -57,11 +155,15 @@ export const Dashboard: React.FC = () => {
                 <Typography color="textSecondary" gutterBottom>
                   Current Balance
                 </Typography>
-                <Typography variant="h5" component="div">
-                  $5,000.00
-                </Typography>
-                <Typography variant="body2" color="success.main">
-                  +2.5% from last month
+                {isInitialLoading ? (
+                  <Skeleton variant="text" width={100} height={40} />
+                ) : (
+                  <Typography variant="h5" component="div">
+                    {formatCurrency(balance?.amount || 0)}
+                  </Typography>
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  Last updated {balance ? formatRelativeTime(new Date()) : 'never'}
                 </Typography>
               </Box>
               <AccountBalance color="primary" />
@@ -69,6 +171,7 @@ export const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
         
+        {/* Total Income Card */}
         <Card>
           <CardContent>
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -76,11 +179,15 @@ export const Dashboard: React.FC = () => {
                 <Typography color="textSecondary" gutterBottom>
                   Total Income
                 </Typography>
-                <Typography variant="h5" component="div">
-                  $3,500.00
-                </Typography>
+                {incomeLoading ? (
+                  <Skeleton variant="text" width={100} height={40} />
+                ) : (
+                  <Typography variant="h5" component="div">
+                    {formatCurrency(totalIncome)}
+                  </Typography>
+                )}
                 <Typography variant="body2" color="success.main">
-                  +12% from last month
+                  {incomeStats?.count || 0} income sources
                 </Typography>
               </Box>
               <TrendingUp color="success" />
@@ -88,6 +195,7 @@ export const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
         
+        {/* Total Expenses Card */}
         <Card>
           <CardContent>
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -95,11 +203,15 @@ export const Dashboard: React.FC = () => {
                 <Typography color="textSecondary" gutterBottom>
                   Total Expenses
                 </Typography>
-                <Typography variant="h5" component="div">
-                  $1,200.00
-                </Typography>
+                {expenseLoading ? (
+                  <Skeleton variant="text" width={100} height={40} />
+                ) : (
+                  <Typography variant="h5" component="div">
+                    {formatCurrency(totalExpenses)}
+                  </Typography>
+                )}
                 <Typography variant="body2" color="error.main">
-                  +5% from last month
+                  {expenseStats?.count || 0} transactions
                 </Typography>
               </Box>
               <TrendingDown color="error" />
@@ -107,6 +219,7 @@ export const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
         
+        {/* Net Cash Flow Card */}
         <Card>
           <CardContent>
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -114,33 +227,47 @@ export const Dashboard: React.FC = () => {
                 <Typography color="textSecondary" gutterBottom>
                   Net Cash Flow
                 </Typography>
-                <Typography variant="h5" component="div" color="success.main">
-                  +$2,300.00
-                </Typography>
-                <Typography variant="body2" color="success.main">
-                  Healthy cash flow
-                </Typography>
+                {incomeLoading || expenseLoading ? (
+                  <Skeleton variant="text" width={100} height={40} />
+                ) : (
+                  <Typography variant="h5" component="div" sx={{ color: cashFlowColor }}>
+                    {netCashFlow >= 0 ? '+' : ''}{formatCurrency(netCashFlow)}
+                  </Typography>
+                )}
+                <Chip 
+                  label={cashFlowStatus || (netCashFlow >= 0 ? 'Positive' : 'Negative')}
+                  size="small"
+                  color={netCashFlow >= 0 ? 'success' : 'error'}
+                  variant="outlined"
+                />
               </Box>
-              <Psychology color="info" />
+              {cashFlowIcon}
             </Box>
           </CardContent>
         </Card>
       </Box>
       
-      {/* Charts Section using CSS Grid */}
+      {/* Charts and Suggestions Section */}
       <Box sx={{ 
         display: 'grid', 
         gridTemplateColumns: { 
           xs: '1fr', 
           lg: '2fr 1fr' 
         }, 
-        gap: 3 
+        gap: 3,
+        mb: 3
       }}>
+        {/* Balance Projection Chart Placeholder */}
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Balance Projection
-            </Typography>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+              <Typography variant="h6">
+                Balance Projection
+              </Typography>
+              <Button startIcon={<Timeline />} variant="outlined" size="small">
+                View Details
+              </Button>
+            </Box>
             <Box 
               height={300} 
               display="flex" 
@@ -153,66 +280,172 @@ export const Dashboard: React.FC = () => {
             >
               <TrendingUp sx={{ fontSize: 48, color: 'grey.400' }} />
               <Typography color="textSecondary" textAlign="center">
-                Interactive charts will be implemented in the next phase
+                Interactive charts coming soon
               </Typography>
               <Typography variant="body2" color="textSecondary" textAlign="center">
-                This will show your projected balance growth over time
+                Your projected balance: {formatCurrency((balance?.amount || 0) + netCashFlow * 12)}
               </Typography>
             </Box>
           </CardContent>
         </Card>
         
+        {/* AI Financial Suggestions */}
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              AI Financial Suggestions
-            </Typography>
-            <Box 
-              height={300} 
-              display="flex" 
-              flexDirection="column"
-              alignItems="center" 
-              justifyContent="center"
-              bgcolor="grey.50"
-              borderRadius={1}
-              gap={1}
-            >
-              <Psychology sx={{ fontSize: 48, color: 'grey.400' }} />
-              <Typography color="textSecondary" textAlign="center">
-                AI-powered insights will be implemented in the next phase
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+              <Typography variant="h6">
+                AI Suggestions
               </Typography>
-              <Typography variant="body2" color="textSecondary" textAlign="center">
-                Get personalized recommendations based on your spending patterns
-              </Typography>
+              <Button 
+                startIcon={<Refresh />} 
+                variant="outlined" 
+                size="small"
+                onClick={refreshSuggestions}
+                disabled={suggestionsLoading}
+              >
+                Refresh
+              </Button>
             </Box>
+            
+            {suggestionsLoading ? (
+              <Box>
+                <LinearProgress sx={{ mb: 2 }} />
+                <Skeleton variant="text" height={20} />
+                <Skeleton variant="text" height={20} />
+                <Skeleton variant="text" height={20} />
+              </Box>
+            ) : hasSuggestions && suggestionsSummary ? (
+              <Stack spacing={2}>
+                <Alert severity="info">
+                  Cash Flow: {suggestionsSummary.cashFlowStatus}
+                </Alert>
+                
+                {suggestionsSummary.topPrioritySuggestion && (
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Top Priority:
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {suggestionsSummary.topPrioritySuggestion.details}
+                    </Typography>
+                  </Box>
+                )}
+                
+                <Typography variant="body2" color="text.secondary">
+                  {suggestionsSummary.suggestionsCount} suggestions available
+                </Typography>
+                
+                <Button variant="contained" size="small" fullWidth>
+                  View All Suggestions
+                </Button>
+              </Stack>
+            ) : (
+              <Box 
+                height={200} 
+                display="flex" 
+                flexDirection="column"
+                alignItems="center" 
+                justifyContent="center"
+                gap={1}
+              >
+                <Psychology sx={{ fontSize: 48, color: 'grey.400' }} />
+                <Typography color="textSecondary" textAlign="center">
+                  Add income and expenses to get AI insights
+                </Typography>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </Box>
 
       {/* Quick Actions */}
-      <Card sx={{ mt: 3 }}>
+      <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Quick Actions
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Box 
-              sx={{ 
-                p: 2, 
-                border: '1px dashed',
-                borderColor: 'grey.300',
-                borderRadius: 1,
-                textAlign: 'center',
-                flex: 1
-              }}
+            <Button
+              variant="outlined"
+              startIcon={<TrendingUp />}
+              onClick={() => toggleDialog('income')}
+              disabled={!balance}
             >
-              <Typography variant="body2" color="textSecondary">
-                Add Income/Expense forms will be implemented in the next phase
-              </Typography>
-            </Box>
+              Add Income
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<TrendingDown />}
+              onClick={() => toggleDialog('expense')}
+              disabled={!balance}
+            >
+              Add Expense
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<AccountBalance />}
+              onClick={() => toggleDialog('balance')}
+            >
+              Update Balance
+            </Button>
           </Stack>
         </CardContent>
       </Card>
+
+      {/* Floating Action Button */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+        }}
+        onClick={() => toggleDialog('expense')}
+        disabled={!balance}
+      >
+        <Add />
+      </Fab>
+
+      {/* Form Dialogs */}
+      <FormDialog
+        open={dialogs.balance}
+        onClose={() => toggleDialog('balance')}
+        title={balance ? 'Update Balance' : 'Set Initial Balance'}
+        subtitle={balance ? 'Adjust your current balance' : 'Start tracking your finances'}
+      >
+        <BalanceForm
+          balance={balance}
+          onSuccess={() => toggleDialog('balance')}
+          onCancel={() => toggleDialog('balance')}
+        />
+      </FormDialog>
+
+      <FormDialog
+        open={dialogs.income}
+        onClose={() => toggleDialog('income')}
+        title="Add Income"
+        subtitle="Track your income sources"
+      >
+        <IncomeForm
+          balanceId={DEMO_BALANCE_ID}
+          onSuccess={() => toggleDialog('income')}
+          onCancel={() => toggleDialog('income')}
+        />
+      </FormDialog>
+
+      <FormDialog
+        open={dialogs.expense}
+        onClose={() => toggleDialog('expense')}
+        title="Add Expense"
+        subtitle="Track your spending"
+      >
+        <ExpenseForm
+          balanceId={DEMO_BALANCE_ID}
+          onSuccess={() => toggleDialog('expense')}
+          onCancel={() => toggleDialog('expense')}
+        />
+      </FormDialog>
     </Box>
   );
 };

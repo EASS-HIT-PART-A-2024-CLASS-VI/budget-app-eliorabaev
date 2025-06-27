@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -13,6 +13,11 @@ import httpx
 router = APIRouter()
 
 GRAPH_MICROSERVICE_URL = "http://graph_microservice:8002"
+
+@router.get("/public/health")
+async def health_check():
+    """Public health check endpoint (no authentication required)"""
+    return {"status": "healthy", "service": "balance"}
 
 @router.post("/", response_model=Balance)
 async def create_balance_endpoint(
@@ -72,8 +77,8 @@ async def delete_balance_endpoint(
 
 @router.get("/{balance_id}/graph")
 async def get_balance_graph(
-    balance_id: int = Depends(validate_balance_id), 
     request: Request,  # Add request to get authorization header
+    balance_id: int = Depends(validate_balance_id), 
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)  # JWT Protection
 ):
@@ -132,7 +137,3 @@ async def get_balance_graph(
             raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 # Optional: Public endpoint that doesn't require authentication
-@router.get("/public/health")
-async def health_check():
-    """Public health check endpoint (no authentication required)"""
-    return {"status": "healthy", "service": "balance"}

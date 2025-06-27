@@ -1,4 +1,3 @@
-# backend/app/routers/income.py
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional

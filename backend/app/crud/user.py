@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from datetime import datetime, timedelta
 from fastapi import HTTPException
-from db.models import User, LoginAttempt
+from db.models import User, LoginAttempt, Balance
 from schemas.user import UserRegistration
 from core.user_validation import validate_registration_data
 from core.password_config import PasswordConfig
@@ -25,7 +25,7 @@ def get_user_by_id(db: Session, user_id: int) -> User:
 
 def create_user(db: Session, user_data: UserRegistration) -> User:
     """
-    Create a new user with validation and password hashing
+    Create a new user with validation, password hashing, and auto-create initial balance
     """
     # Validate registration data
     validated_data = validate_registration_data(
@@ -49,21 +49,38 @@ def create_user(db: Session, user_data: UserRegistration) -> User:
     hashed_password = PasswordHasher.hash_password(validated_data["password"])
     logger.info(f"Password hashed for user {validated_data['username']}")
     
-    # Create new user with hashed password
-    db_user = User(
-        username=validated_data["username"],
-        email=validated_data["email"],
-        password=hashed_password,  # Store hashed password with salt
-        is_active=True,
-        is_verified=False
-    )
-    
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    
-    logger.info(f"New user created: {db_user.username} (ID: {db_user.id})")
-    return db_user
+    try:
+        # Create new user with hashed password
+        db_user = User(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            password=hashed_password,
+            is_active=True,
+            is_verified=False
+        )
+        
+        db.add(db_user)
+        db.flush()  # Flush to get the user ID without committing
+        
+        # Auto-create initial balance with $0
+        initial_balance = Balance(
+            amount=0.0,
+            user_id=db_user.id
+        )
+        
+        db.add(initial_balance)
+        db.commit()  # Commit both user and balance
+        db.refresh(db_user)
+        
+        logger.info(f"New user created: {db_user.username} (ID: {db_user.id}) with initial balance")
+        return db_user
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating user {validated_data['username']}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create user account")
+
+
 
 def get_failed_login_attempts(db: Session, user_id: int, since_minutes: int = None) -> int:
     """

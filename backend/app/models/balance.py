@@ -1,10 +1,12 @@
+# backend/app/models/balance.py - Fix validation to allow $0 balances
+
 from pydantic import BaseModel, Field
 from typing import Optional  # Import Optional for optional fields
 
 class Balance(BaseModel):
     # Define the Balance model with an optional ID and amount
     id: Optional[int] = Field(default=None, description="The ID of the balance")
-    amount: float = Field(gt=0, description="The balance amount must be greater than zero")
+    amount: float = Field(ge=0, description="The balance amount must be greater than or equal to zero")  # Changed from gt=0
 
 
 class Income(BaseModel):

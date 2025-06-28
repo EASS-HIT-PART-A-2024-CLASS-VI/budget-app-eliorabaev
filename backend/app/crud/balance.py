@@ -1,23 +1,23 @@
-# Update backend/app/crud/balance.py
+# backend/app/crud/balance.py - Update to use balance-specific validation
 
 import crud
 from sqlalchemy.orm import Session
 from db.models import Balance, User
 from schemas.balance import BalanceCreate, BalanceUpdate
-from core.validation import validate_positive_amount, validate_id
+from core.validation import validate_balance_amount, validate_id  # Use balance-specific validation
 from fastapi import HTTPException
 
 def create_balance(db: Session, balance: BalanceCreate, user_id: int):
     """Create a new balance with validation and user association"""
-    # Validate the amount
-    validated_amount = validate_positive_amount(balance.amount)
+    # Validate the amount (allows $0)
+    validated_amount = validate_balance_amount(balance.amount)
     
     # Create balance with user association
     db_balance = Balance(amount=validated_amount, user_id=user_id)
     db.add(db_balance)
     db.commit()
     db.refresh(db_balance)
-    return crud.balance.create_balance(db, balance)
+    return db_balance
 
 
 def get_user_balances(db: Session, user_id: int):
@@ -53,9 +53,9 @@ def update_balance(db: Session, balance_id: int, balance: BalanceUpdate, user_id
     
     if db_balance:
         update_data = balance.dict(exclude_unset=True)
-        # Validate amount if it's being updated
+        # Validate amount if it's being updated (allows $0)
         if 'amount' in update_data:
-            update_data['amount'] = validate_positive_amount(update_data['amount'])
+            update_data['amount'] = validate_balance_amount(update_data['amount'])
         for key, value in update_data.items():
             setattr(db_balance, key, value)
         db.commit()

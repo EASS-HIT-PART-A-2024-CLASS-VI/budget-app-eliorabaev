@@ -1,3 +1,5 @@
+# backend/app/core/validation.py - Add balance-specific validation
+
 from fastapi import HTTPException
 from typing import Dict, Any, List, Optional
 import re
@@ -5,13 +7,23 @@ import unicodedata
 from pydantic import ValidationError
 
 def validate_positive_amount(amount: float, field_name: str = "amount"):
-    """Validate that an amount is positive."""
+    """Validate that an amount is positive (for income/expenses)."""
     if amount is None:
         raise HTTPException(status_code=422, detail=f"{field_name} cannot be None")
     if not isinstance(amount, (int, float)):
         raise HTTPException(status_code=422, detail=f"{field_name} must be a number")
     if amount <= 0:
         raise HTTPException(status_code=422, detail=f"{field_name} must be greater than zero")
+    return amount
+
+def validate_balance_amount(amount: float, field_name: str = "amount"):
+    """Validate that a balance amount is non-negative (allows $0 for new users)."""
+    if amount is None:
+        raise HTTPException(status_code=422, detail=f"{field_name} cannot be None")
+    if not isinstance(amount, (int, float)):
+        raise HTTPException(status_code=422, detail=f"{field_name} must be a number")
+    if amount < 0:  # Only reject negative amounts, allow zero
+        raise HTTPException(status_code=422, detail=f"{field_name} cannot be negative")
     return amount
 
 def sanitize_string(value: str, field_name: str = "field", max_length: int = 255) -> str:

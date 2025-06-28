@@ -1,3 +1,5 @@
+# backend/app/routers/balance.py - Add new route for getting user's primary balance
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List
@@ -7,7 +9,7 @@ from db.database import get_db
 from schemas.balance import Balance, BalanceCreate, BalanceUpdate
 from dependencies import validate_balance_id, validate_pagination
 from core.auth_dependencies import get_current_user
-from db.models import User
+from db.models import User, Balance as BalanceModel
 import httpx
 
 router = APIRouter()
@@ -25,7 +27,7 @@ async def get_user_balances(
     current_user: User = Depends(get_current_user)
 ):
     """Get all balances for the current user"""
-    balances = db.query(Balance).filter(Balance.user_id == current_user.id).all()
+    balances = db.query(BalanceModel).filter(BalanceModel.user_id == current_user.id).all()
     return balances
 
 @router.get("/current", response_model=Balance)
@@ -34,9 +36,10 @@ async def get_current_user_balance(
     current_user: User = Depends(get_current_user)
 ):
     """Get the user's primary/first balance"""
-    balance = db.query(Balance).filter(Balance.user_id == current_user.id).first()
+    balance = db.query(BalanceModel).filter(BalanceModel.user_id == current_user.id).first()
     if not balance:
-        raise HTTPException(status_code=404, detail="No balance found. Please create one first.")
+        # This should not happen with auto-creation, but handle gracefully
+        raise HTTPException(status_code=404, detail="No balance found. Please contact support.")
     return balance
 
 @router.post("/", response_model=Balance)
@@ -45,9 +48,14 @@ async def create_balance_endpoint(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Create a new balance for the authenticated user"""
+    """Create a new balance for the authenticated user (rarely used now that auto-creation exists)"""
+    # Check if user already has a balance
+    existing_balance = db.query(BalanceModel).filter(BalanceModel.user_id == current_user.id).first()
+    if existing_balance:
+        raise HTTPException(status_code=400, detail="User already has a balance. Use PATCH to update it.")
+    
     # Create balance with user association
-    db_balance = Balance(amount=balance.amount, user_id=current_user.id)
+    db_balance = BalanceModel(amount=balance.amount, user_id=current_user.id)
     db.add(db_balance)
     db.commit()
     db.refresh(db_balance)
@@ -57,16 +65,16 @@ async def create_balance_endpoint(
 async def get_balance_endpoint(
     balance_id: int = Depends(validate_balance_id), 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # JWT Protection
+    current_user: User = Depends(get_current_user)
 ):
-    """Get a balance by ID (user must be authenticated)"""
+    """Get a balance by ID (user must be authenticated and own the balance)"""
     db_balance = crud.balance.get_balance(db, balance_id)
     if db_balance is None:
         raise HTTPException(status_code=404, detail="Balance not found")
     
-    # Optional: Add user ownership check
-    # if db_balance.user_id and db_balance.user_id != current_user.id:
-    #     raise HTTPException(status_code=403, detail="Access denied")
+    # Ensure user owns this balance
+    if db_balance.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied to this balance")
     
     return db_balance
 
@@ -75,16 +83,38 @@ async def update_balance_endpoint(
     balance_id: int = Depends(validate_balance_id), 
     balance: BalanceUpdate = None, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # JWT Protection
+    current_user: User = Depends(get_current_user)
 ):
-    """Update a balance (user must be authenticated)"""
-    db_balance = crud.balance.update_balance(db, balance_id, balance)
+    """Update a balance (user must be authenticated and own the balance)"""
+    # Get the balance and ensure user owns it
+    db_balance = crud.balance.get_balance(db, balance_id)
     if db_balance is None:
         raise HTTPException(status_code=404, detail="Balance not found")
     
-    # Optional: Add user ownership check
-    # if db_balance.user_id and db_balance.user_id != current_user.id:
-    #     raise HTTPException(status_code=403, detail="Access denied")
+    if db_balance.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied to this balance")
+    
+    # Update the balance
+    db_balance = crud.balance.update_balance(db, balance_id, balance)
+    return db_balance
+
+@router.patch("/current", response_model=Balance)
+async def update_current_user_balance(
+    balance: BalanceUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update the user's primary balance - convenient endpoint for dashboard"""
+    # Get user's primary balance
+    db_balance = db.query(BalanceModel).filter(BalanceModel.user_id == current_user.id).first()
+    if not db_balance:
+        raise HTTPException(status_code=404, detail="No balance found. Please contact support.")
+    
+    # Update the balance
+    if balance.amount is not None:
+        db_balance.amount = balance.amount
+        db.commit()
+        db.refresh(db_balance)
     
     return db_balance
 
@@ -92,9 +122,17 @@ async def update_balance_endpoint(
 async def delete_balance_endpoint(
     balance_id: int = Depends(validate_balance_id), 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # JWT Protection
+    current_user: User = Depends(get_current_user)
 ):
-    """Delete a balance (user must be authenticated)"""
+    """Delete a balance (user must be authenticated and own the balance)"""
+    # Get the balance and ensure user owns it
+    db_balance = crud.balance.get_balance(db, balance_id)
+    if db_balance is None:
+        raise HTTPException(status_code=404, detail="Balance not found")
+    
+    if db_balance.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied to this balance")
+    
     success = crud.balance.delete_balance(db, balance_id)
     if not success:
         raise HTTPException(status_code=404, detail="Balance not found")
@@ -102,22 +140,22 @@ async def delete_balance_endpoint(
 
 @router.get("/{balance_id}/graph")
 async def get_balance_graph(
-    request: Request,  # Add request to get authorization header
+    request: Request,
     balance_id: int = Depends(validate_balance_id), 
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # JWT Protection
+    current_user: User = Depends(get_current_user)
 ):
     """
     Fetch balance graph data and projected revenue from the graph_microservice.
-    (user must be authenticated)
+    (user must be authenticated and own the balance)
     """
-    # First verify that the balance exists
+    # First verify that the balance exists and user owns it
     db_balance = crud.balance.get_balance(db, balance_id)
     if db_balance is None:
         raise HTTPException(status_code=404, detail="Balance not found")
     
-    if db_balance.user_id and db_balance.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
+    if db_balance.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied to this balance")
     
     # Extract the Authorization header to forward to graph microservice
     auth_header = request.headers.get("authorization")
@@ -160,4 +198,3 @@ async def get_balance_graph(
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
-

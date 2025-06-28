@@ -1,3 +1,5 @@
+# backend/app/core/utils.py - Update validation to allow $0 balances
+
 from fastapi import HTTPException
 
 def get_balance_or_404(budget_state, balance_id):
@@ -11,11 +13,20 @@ def get_balance_or_404(budget_state, balance_id):
 
 def validate_positive_amount(amount: float):
     """
-    Validates that the given amount is positive.
+    Validates that the given amount is positive (for income/expenses).
     Raises a ValueError if the amount is not valid.
     """
     if amount <= 0:
         raise ValueError("Amount must be a positive value")
+    return amount
+
+def validate_balance_amount(amount: float):
+    """
+    Validates that the given balance amount is non-negative (allows $0).
+    Raises a ValueError if the amount is not valid.
+    """
+    if amount < 0:
+        raise ValueError("Balance amount cannot be negative")
     return amount
 
 def calculate_total_for_balance(items, balance_id):

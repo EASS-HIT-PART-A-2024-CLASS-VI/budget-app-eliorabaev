@@ -1,54 +1,61 @@
-// src/components/forms/BalanceForm.tsx
-import React from 'react';
+// frontend/src/components/forms/BalanceForm.tsx - Updated for balance updates
+
+import React, { useState, useEffect } from 'react';
 import {
-  Box,
   TextField,
   Button,
+  Stack,
+  Box,
   Typography,
   Alert,
-  CircularProgress,
-  Stack,
   InputAdornment,
+  CircularProgress,
 } from '@mui/material';
-import { AccountBalance } from '@mui/icons-material';
-import { useForm, Controller } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { balanceSchema } from '../../utils/validators';
-import { Balance, BalanceCreate, BalanceUpdate } from '../../types/financial.types';
-import { useCreateBalance, useUpdateBalance } from '../../hooks/useBalance';
+import * as yup from 'yup';
+import { apiClient } from '../../services/api';
 
 interface BalanceFormProps {
-  balance?: Balance; // If provided, we're editing; otherwise creating
-  onSuccess?: (balance: Balance) => void;
+  balance?: any;
+  onSuccess: (balance: any) => void;
   onCancel?: () => void;
   submitButtonText?: string;
+  isUpdate?: boolean;
+  balanceId?: number;
 }
 
-type FormData = {
+interface BalanceFormData {
   amount: number;
-};
+}
+
+const balanceSchema = yup.object({
+  amount: yup
+    .number()
+    .required('Amount is required')
+    .min(0, 'Amount must be positive or zero')
+    .max(999999999, 'Amount is too large')
+    .typeError('Please enter a valid number'),
+});
 
 export const BalanceForm: React.FC<BalanceFormProps> = ({
   balance,
   onSuccess,
   onCancel,
   submitButtonText,
+  isUpdate = false,
+  balanceId,
 }) => {
-  const isEditing = !!balance;
-  const createMutation = useCreateBalance();
-  const updateMutation = useUpdateBalance();
-  
-  const currentMutation = isEditing ? updateMutation : createMutation;
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Form setup with validation
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
-    setError,
-    clearErrors,
-    reset,
-  } = useForm<FormData>({
+    setValue,
+    watch,
+  } = useForm<BalanceFormData>({
     resolver: yupResolver(balanceSchema),
     mode: 'onChange',
     defaultValues: {
@@ -56,82 +63,87 @@ export const BalanceForm: React.FC<BalanceFormProps> = ({
     },
   });
 
-  // Handle form submission
-  const onSubmit = async (data: FormData) => {
+  // Watch the amount for real-time feedback
+  const currentAmount = watch('amount');
+
+  useEffect(() => {
+    if (balance?.amount !== undefined) {
+      setValue('amount', balance.amount);
+    }
+  }, [balance, setValue]);
+
+  const onSubmit = async (data: BalanceFormData) => {
     try {
-      clearErrors();
+      setIsLoading(true);
+      setError(null);
+
+      let response;
       
-      let result: Balance;
-      
-      if (isEditing && balance) {
+      if (isUpdate && (balanceId || balance?.id)) {
         // Update existing balance
-        const updateData: BalanceUpdate = { amount: data.amount };
-        result = await updateMutation.mutateAsync({ id: balance.id, data: updateData });
-      } else {
-        // Create new balance
-        const createData: BalanceCreate = { amount: data.amount };
-        result = await createMutation.mutateAsync(createData);
-      }
-      
-      // Call success callback
-      onSuccess?.(result);
-      
-      // Reset form if creating (not needed for editing as component usually unmounts)
-      if (!isEditing) {
-        reset();
-      }
-      
-    } catch (err: any) {
-      // Handle specific validation errors from backend
-      if (err.response?.status === 422) {
-        const detail = err.response.data.detail;
-        if (detail.includes('amount')) {
-          setError('amount', { message: detail });
+        const updateId = balanceId || balance.id;
+        if (updateId) {
+          // Use the convenient /current endpoint if available, otherwise use specific ID
+          response = await apiClient.patch('/balance/current', {
+            amount: data.amount
+          });
+        } else {
+          throw new Error('No balance ID provided for update');
         }
+      } else {
+        // Create new balance (fallback for edge cases)
+        response = await apiClient.post('/balance/', {
+          amount: data.amount
+        });
       }
-      // General errors are handled by the error state from mutations
+
+      onSuccess(response.data);
+    } catch (err: any) {
+      console.error('Balance operation error:', err);
+      if (err.response?.status === 400) {
+        setError(err.response.data.detail || 'Invalid balance data');
+      } else if (err.response?.status === 404) {
+        setError('Balance not found. Please contact support.');
+      } else if (err.response?.status === 403) {
+        setError('You do not have permission to modify this balance.');
+      } else {
+        setError('Failed to save balance. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Get error message from mutation
-  const getErrorMessage = () => {
-    const error = currentMutation.error as any;
-    if (error?.response?.data?.detail) {
-      return error.response.data.detail;
-    }
-    if (error?.message) {
-      return error.message;
-    }
-    return `Failed to ${isEditing ? 'update' : 'create'} balance`;
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
   };
+
+  const isFirstTimeSetup = balance?.amount === 0 || currentAmount === 0;
 
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack spacing={3}>
-        {/* Title */}
-        <Box display="flex" alignItems="center" gap={1}>
-          <AccountBalance color="primary" />
-          <Typography variant="h6">
-            {isEditing ? 'Edit Balance' : 'Set Initial Balance'}
-          </Typography>
-        </Box>
-
-        {/* Description */}
-        <Typography variant="body2" color="text.secondary">
-          {isEditing 
-            ? 'Update your current balance amount'
-            : 'Enter your starting balance to begin tracking your finances'
-          }
-        </Typography>
-
-        {/* Error Alert */}
-        {currentMutation.error && (
-          <Alert severity="error">
-            {getErrorMessage()}
+        {/* Help text for first-time users */}
+        {isFirstTimeSetup && (
+          <Alert severity="info">
+            <Typography variant="body2">
+              💡 <strong>Tip:</strong> Enter your current bank account balance or total available funds. 
+              You can always update this later as your balance changes.
+            </Typography>
           </Alert>
         )}
 
-        {/* Amount Field */}
+        {/* Error display */}
+        {error && (
+          <Alert severity="error">
+            {error}
+          </Alert>
+        )}
+
+        {/* Amount input */}
         <Controller
           name="amount"
           control={control}
@@ -139,19 +151,17 @@ export const BalanceForm: React.FC<BalanceFormProps> = ({
             <TextField
               {...field}
               fullWidth
-              label="Balance Amount"
+              label="Current Balance"
               type="number"
               variant="outlined"
               error={!!errors.amount}
-              helperText={errors.amount?.message || 'Enter the current balance in your account'}
-              disabled={currentMutation.isPending}
+              helperText={
+                errors.amount?.message || 
+                'Enter your current account balance'
+              }
               autoFocus
               InputProps={{
                 startAdornment: <InputAdornment position="start">$</InputAdornment>,
-              }}
-              inputProps={{
-                min: 0,
-                step: 0.01,
               }}
               onChange={(e) => {
                 const value = parseFloat(e.target.value) || 0;
@@ -161,13 +171,34 @@ export const BalanceForm: React.FC<BalanceFormProps> = ({
           )}
         />
 
-        {/* Form Actions */}
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
+        {/* Real-time preview */}
+        {currentAmount > 0 && (
+          <Box 
+            sx={{ 
+              p: 2, 
+              bgcolor: 'primary.50', 
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'primary.200'
+            }}
+          >
+            <Typography variant="body2" color="primary.main" gutterBottom>
+              💰 Your balance will be set to:
+            </Typography>
+            <Typography variant="h6" color="primary.main">
+              {formatCurrency(currentAmount)}
+            </Typography>
+          </Box>
+        )}
+
+        {/* Action buttons */}
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           {onCancel && (
             <Button
               variant="outlined"
               onClick={onCancel}
-              disabled={currentMutation.isPending}
+              disabled={isLoading}
+              fullWidth
             >
               Cancel
             </Button>
@@ -176,27 +207,27 @@ export const BalanceForm: React.FC<BalanceFormProps> = ({
           <Button
             type="submit"
             variant="contained"
-            disabled={currentMutation.isPending || !isValid}
+            disabled={isLoading || !isValid}
+            fullWidth
             startIcon={
-              currentMutation.isPending ? (
+              isLoading ? (
                 <CircularProgress size={20} />
-              ) : (
-                <AccountBalance />
-              )
+              ) : null
             }
           >
-            {currentMutation.isPending 
-              ? (isEditing ? 'Updating...' : 'Creating...') 
-              : (submitButtonText || (isEditing ? 'Update Balance' : 'Set Balance'))
+            {isLoading 
+              ? 'Saving...' 
+              : submitButtonText || (isUpdate ? 'Update Balance' : 'Set Balance')
             }
           </Button>
         </Stack>
 
-        {/* Success Message */}
-        {currentMutation.isSuccess && (
-          <Alert severity="success">
-            Balance {isEditing ? 'updated' : 'created'} successfully!
-          </Alert>
+        {/* Additional help for new users */}
+        {isFirstTimeSetup && (
+          <Typography variant="body2" color="text.secondary" textAlign="center">
+            After setting your balance, you can add income sources and track expenses 
+            to get personalized financial insights powered by AI.
+          </Typography>
         )}
       </Stack>
     </Box>

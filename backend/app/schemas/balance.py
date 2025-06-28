@@ -1,3 +1,5 @@
+# backend/app/schemas/balance.py - Update validation to allow $0 balances
+
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime
@@ -6,8 +8,8 @@ import re
 # Base Schemas
 class BalanceBase(BaseModel):
     amount: float = Field(
-        gt=0,
-        description="The balance amount must be greater than zero",
+        ge=0,  # Changed from gt=0 to ge=0 to allow $0 balances
+        description="The balance amount must be greater than or equal to zero",
         example=1000.00
     )
     
@@ -26,7 +28,7 @@ class IncomeBase(BaseModel):
         example="Salary"
     )
     amount: float = Field(
-        gt=0,
+        gt=0,  # Income should still be greater than 0
         description="The income amount must be greater than zero",
         example=2500.00
     )
@@ -52,7 +54,7 @@ class ExpenseBase(BaseModel):
         example="Groceries"
     )
     amount: float = Field(
-        gt=0,
+        gt=0,  # Expenses should still be greater than 0
         description="The expense amount must be greater than zero",
         example=150.00
     )
@@ -80,9 +82,21 @@ class IncomeCreate(IncomeBase):
 class ExpenseCreate(ExpenseBase):
     pass
 
-# Update Schemas
+# Update Schemas  
 class BalanceUpdate(BaseModel):
-    amount: Optional[float] = None
+    amount: Optional[float] = Field(
+        None, 
+        ge=0,  # Allow $0 in updates too
+        description="The balance amount must be greater than or equal to zero"
+    )
+    
+    @validator('amount')
+    def amount_must_be_reasonable(cls, v):
+        if v is not None:
+            if v > 1_000_000_000:  # 1 billion limit
+                raise ValueError("Amount exceeds reasonable limits")
+            return round(v, 2)  # Round to 2 decimal places
+        return v
 
 class IncomeUpdate(BaseModel):
     balance_id: Optional[int] = None
